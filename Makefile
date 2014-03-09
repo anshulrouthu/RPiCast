@@ -11,23 +11,26 @@ FFMPEG_LIBS=    libavdevice                        \
                 libavutil                          \
 
 #CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
-LDLIBS:= $(shell pkg-config --libs $(FFMPEG_LIBS)) $(LDLIBS)
+FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 
 CC:=g++
-CFLAGS:=$(CFLAGS) -Wall -g -O2
-TARGET:=rpicast-server rpicast-client
+CFLAGS:=-Wall -g -O2
+TARGET:=rpicast
 SRC:=./source
 SAMPLES:=./samples/*.cpp
 BIN:=bin
 INCLUDE=
-LDLIBS:=$(LDLIBS) -lcurl -lUnitTest++ -lpthread
-INC:=-Itarget/include/ -Isource/components/ -Isource/framework/ -Isource/osapi/
+LDLIBS:=-lcurl -lUnitTest++ $(FFMPEGLIBS)
+INC:=-Itarget/include/ -Isource/osapi/ -Isource/framework/ -Isource/components/ -Isource/components/av_pipe/
 LDPATH:=-Ltarget/lib/
 
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=source/main/console_command.cpp    
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/components/*.cpp) $(wildcard source/framework/*.cpp) $(wildcard source/osapi/*.cpp)))
+OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/components/*.cpp)       \
+                                          $(wildcard source/framework/*.cpp)                     \
+                                          $(wildcard source/osapi/*.cpp)                         \
+                                          $(wildcard source/components/av_pipe/*.cpp)))
 
 ############ ----- build main application ----- ##############
 

@@ -44,8 +44,8 @@ void* Buffer::GetData()
 
 VC_STATUS Buffer::WriteData(void* buf, size_t size)
 {
-    DBG_CHECK(!memcpy(m_data, buf, size), return VC_FAILURE, "Error writing data to buffer");
-    m_size = size;
+    DBG_CHECK(!memcpy(m_data + m_size, buf, size), return VC_FAILURE, "Error writing data to buffer");
+    m_size += size;
     return (VC_SUCCESS);
 }
 

@@ -25,7 +25,7 @@
 #include "mutex.h"
 
 class ADevice;
-class APipe;
+class BasePipe;
 
 /**
  * An InputPort to a device that receives data.
@@ -61,7 +61,7 @@ private:
  */
 class OutputPort
 {
-    friend class APipe;
+    friend class BasePipe;
 public:
     OutputPort(std::string name, ADevice* device);
     ~OutputPort()
@@ -100,46 +100,46 @@ typedef struct
 /**
  * A pipe that maintains all the devices and their connections
  */
-class APipe
+class BasePipe
 {
 public:
-    APipe(std::string name);
-    ~APipe()
+    BasePipe(std::string name);
+    virtual ~BasePipe()
     {
     }
 
     /**
      * Query the pipe for available devices
      */
-    ADevice* GetDevice(VC_DEVICETYPE dev, std::string name, const char* filename = "");
+    virtual ADevice* GetDevice(VC_DEVICETYPE dev, std::string name, const char* filename = "");
 
     /**
      * Connects the devices to their default ports i.e port 0
      * @param src source device
      * @param dst destination device
      */
-    VC_STATUS ConnectDevices(ADevice* src, ADevice* dst, int src_portno = 0, int dst_portno = 0);
+    virtual VC_STATUS ConnectDevices(ADevice* src, ADevice* dst, int src_portno = 0, int dst_portno = 0);
 
     /**
      * Disconnects the devices from their default ports i.e port 0
      * @param src source device
      * @param dst destination device
      */
-    VC_STATUS DisconnectDevices(ADevice* src, ADevice* dst, int src_portno = 0, int dst_portno = 0);
+    virtual VC_STATUS DisconnectDevices(ADevice* src, ADevice* dst, int src_portno = 0, int dst_portno = 0);
 
     /**
      * Connect the specific ports irrespective of device's default
      * @param input port
      * @param output port
      */
-    VC_STATUS ConnectPorts(InputPort* input, OutputPort* output);
+    virtual VC_STATUS ConnectPorts(InputPort* input, OutputPort* output);
 
     /**
      * Disconnect the specific ports irrespective of device's default
      * @param input port
      * @param output port
      */
-    VC_STATUS DisconnectPorts(InputPort* input, OutputPort* output);
+    virtual VC_STATUS DisconnectPorts(InputPort* input, OutputPort* output);
 
     const char* c_str()
     {
@@ -164,6 +164,7 @@ public:
     }
 
     virtual VC_STATUS Initialize()=0;
+    virtual VC_STATUS Uninitialize()=0;
 
     /**
      * Function to notify the device for any events
@@ -206,8 +207,9 @@ public:
     /**
      * ADevice Constructor
      */
-    ADevice(std::string name, APipe* pipe = NULL) :
+    ADevice(std::string name, BasePipe* pipe = NULL) :
         m_name(name),
+        m_mutex(),
         m_cv(m_mutex),
         m_pipe(pipe)
     {
@@ -224,6 +226,14 @@ public:
      * Initialize the device, calls the childs implementation
      */
     virtual VC_STATUS Initialize()
+    {
+        return (VC_NOT_IMPLEMENTED);
+    }
+
+    /**
+     * Uninitialize the device, calls the childs implementation
+     */
+    virtual VC_STATUS Uninitialize()
     {
         return (VC_NOT_IMPLEMENTED);
     }
@@ -289,7 +299,7 @@ protected:
     std::string m_name;
     Mutex m_mutex;
     ConditionVariable m_cv;
-    APipe* m_pipe;
+    BasePipe* m_pipe;
 
 };
 

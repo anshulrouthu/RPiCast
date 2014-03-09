@@ -19,7 +19,7 @@
 
 #include "utils.h"
 #include <UnitTest++.h>
-#include "apipe.h"
+#include "basepipe.h"
 #include "file_io.h"
 
 class TestDevice: public ADevice
@@ -97,7 +97,7 @@ TEST(ADeviceAPIs)
 TEST(ADeviceConnections)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing ADeviceConnections\n"));
-    APipe* pipe = new APipe("Pipe 0");
+    BasePipe* pipe = new BasePipe("Pipe 0");
     TestDevice* src = new TestDevice("TestDevice Src");
     TestDevice* dst = new TestDevice("TestDevice Dst");
 
@@ -125,7 +125,7 @@ TEST(ADeviceConnections)
 TEST(InputOutputPorts)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing InputOutputPorts\n"));
-    APipe* pipe = new APipe("InputOutput Pipe 0");
+    BasePipe* pipe = new BasePipe("InputOutput Pipe 0");
     InputPort* input = new InputPort("InputOutput Input 0", NULL);
     OutputPort* output = new OutputPort("InputOutput Output 0", NULL);
 
@@ -155,7 +155,7 @@ TEST(InputOutputPorts)
 TEST(FileIOTEST)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing FileIOTEST\n"));
-    APipe* pipe = new APipe("FileIO Pipe 0");
+    BasePipe* pipe = new BasePipe("FileIO Pipe 0");
     FileSink* fsink = new FileSink("FileIO FileSink", "FileSink.out");
     FileSrc* fsrc = new FileSrc("FileIO FileSrc", "FileSink.out");
     OutputPort* output = new OutputPort("FileIO Output 0", NULL);
@@ -188,6 +188,7 @@ TEST(FileIOTEST)
     CHECK(!!buf);
     CHECK_EQUAL(buf->SetTag(TAG_END), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+    usleep(100000); // wait for fsink to process buffer
     CHECK_EQUAL(fsink->SendCommand(VC_CMD_STOP), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(fsink->Input(0), output), VC_SUCCESS);
     delete fsink;
@@ -203,7 +204,7 @@ TEST(FileIOTEST)
     CHECK_EQUAL(buf->GetTag(), TAG_START);
     CHECK_EQUAL(input->RecycleBuffer(buf), VC_SUCCESS);
 
-    //wait untill a buffer is pushed but source device
+    //wait untill a buffer is pushed by source device
     while (!input->IsBufferAvailable())
         ;
     CHECK(input->IsBufferAvailable());
@@ -217,7 +218,7 @@ TEST(FileIOTEST)
     FILE* fp;
     char c[12];
     fp = fopen("FileSink.out", "rb");
-    fread(c, 1, 12, fp);
+    CHECK_EQUAL(fread(c, 1, 12, fp),(uint32_t)12);
     CHECK(!memcmp(c, "VoiceCommand", 12));
 
     fclose(fp);

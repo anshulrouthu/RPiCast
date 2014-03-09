@@ -20,11 +20,11 @@
 #ifndef FILE_CAPTURE_H_
 #define FILE_CAPTURE_H_
 
-#include "apipe.h"
+#include "basepipe.h"
 #include "utils.h"
 #include "worker.h"
 
-class FileSink: public ADevice
+class FileSink: public ADevice, public WorkerThread
 {
 public:
     FileSink(std::string name, const char* filename);
@@ -37,6 +37,7 @@ public:
     virtual VC_STATUS SendCommand(VC_CMD cmd);
 
 private:
+    virtual void Task();
     VC_STATUS WriteData();
     FILE* m_file;
     InputPort* m_input;

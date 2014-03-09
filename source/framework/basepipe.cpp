@@ -10,19 +10,18 @@
  express or implied.
  ***********************************************************/
 
-#include "apipe.h"
-#include "file_io.h"
+#include "basepipe.h"
 
 /**
  * Number of input buffers
  */
-#define NUM_OF_BUFFERS 128
+#define NUM_OF_BUFFERS 64
 
 /**
  * APipe constructor
  * @param name to identify the pipe
  */
-APipe::APipe(std::string name) :
+BasePipe::BasePipe(std::string name) :
     m_name(name)
 {
 }
@@ -33,33 +32,9 @@ APipe::APipe(std::string name) :
  * @param[in] name of the device to be names for identification
  * @return device instance of the device available based on type
  */
-ADevice* APipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* filename)
+ADevice* BasePipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* filename)
 {
     DBG_TRACE("Enter");
-    switch (devtype)
-    {
-    case VC_CAPTURE_DEVICE:
-        break;
-    case VC_AUDIO_PROCESSOR:
-        break;
-    case VC_FLAC_DEVICE:
-        break;
-    case VC_CURL_DEVICE:
-        break;
-    case VC_TEXT_PROCESSOR:
-        break;
-    case VC_COMMAND_PROCESSOR:
-        break;
-    case VC_FILESINK_DEVICE:
-        return (new FileSink(name, filename));
-        break;
-    case VC_FILESRC_DEVICE:
-        return (new FileSrc(name, filename));
-        break;
-    default:
-        break;
-    }
-
     return (NULL);
 }
 
@@ -68,7 +43,7 @@ ADevice* APipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* f
  * @param src source device
  * @param dst destination device
  */
-VC_STATUS APipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
+VC_STATUS BasePipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
     DBG_TRACE("Enter");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
@@ -80,7 +55,7 @@ VC_STATUS APipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, int 
  * @param src source device
  * @param dst destination device
  */
-VC_STATUS APipe::DisconnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
+VC_STATUS BasePipe::DisconnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
     DBG_TRACE("Enter");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
@@ -92,7 +67,7 @@ VC_STATUS APipe::DisconnectDevices(ADevice* src, ADevice* dst, int src_portno, i
  * @param input port
  * @param output port
  */
-VC_STATUS APipe::ConnectPorts(InputPort* input, OutputPort* output)
+VC_STATUS BasePipe::ConnectPorts(InputPort* input, OutputPort* output)
 {
     DBG_TRACE("Enter");
     DBG_CHECK(!input || !output, return (VC_FAILURE), "Error: Null parameters");
@@ -104,7 +79,7 @@ VC_STATUS APipe::ConnectPorts(InputPort* input, OutputPort* output)
  * @param input port
  * @param output port
  */
-VC_STATUS APipe::DisconnectPorts(InputPort* input, OutputPort* output)
+VC_STATUS BasePipe::DisconnectPorts(InputPort* input, OutputPort* output)
 {
     DBG_TRACE("Enter");
     DBG_CHECK(!input || !output, return (VC_FAILURE), "Error: Null parameters");
@@ -121,6 +96,7 @@ InputPort::InputPort(std::string name, ADevice* device) :
     m_name(name),
     m_device(device)
 {
+    DBG_TRACE("Enter");
     for (int i = 0; i < NUM_OF_BUFFERS; i++)
     {
         Buffer* buf = new Buffer();
@@ -144,7 +120,6 @@ InputPort::~InputPort()
 Buffer* InputPort::GetFilledBuffer()
 {
     DBG_TRACE("Enter");
-
     AutoMutex automutex(&m_queue_mutex);
     DBG_CHECK(m_processbuf.size() == 0, return (NULL), "No buffers available to be processed");
 
@@ -161,7 +136,6 @@ Buffer* InputPort::GetFilledBuffer()
 Buffer* InputPort::GetEmptyBuffer()
 {
     DBG_TRACE("Enter");
-
     while (m_buffers.size() == 0)
     {
         //this should not happen or we starve for buffer

@@ -83,7 +83,8 @@ OutputPort* FileSink::Output(int portno)
 VC_STATUS FileSink::Notify(VC_EVENT* evt)
 {
     DBG_TRACE("Enter");
-    WriteData();
+    AutoMutex automutex(&m_mutex);
+    m_cv.Notify();
     return (VC_SUCCESS);
 }
 
@@ -92,8 +93,43 @@ VC_STATUS FileSink::Notify(VC_EVENT* evt)
  */
 VC_STATUS FileSink::SendCommand(VC_CMD cmd)
 {
-    DBG_TRACE("Enter");
+    switch (cmd)
+    {
+    case VC_CMD_START:
+        Start();
+        break;
+    case VC_CMD_STOP:
+        Stop();
+        break;
+    }
     return (VC_SUCCESS);
+}
+
+void FileSink::Task()
+{
+    DBG_TRACE("Enter");
+
+    while (m_state)
+    {
+        if (m_input->IsBufferAvailable())
+        {
+            Buffer* buf = m_input->GetFilledBuffer();
+            if (buf->GetTag() == TAG_NONE)
+            {
+                fwrite(buf->GetData(), buf->GetSize(), 1, m_file);
+            }
+            m_input->RecycleBuffer(buf);
+        }
+        else
+        {
+            AutoMutex automutex(&m_mutex);
+            while(!m_input->IsBufferAvailable() && m_state)
+            {
+                m_cv.Wait();
+            }
+        }
+    }
+
 }
 
 FileSrc::FileSrc(std::string name, const char* in_file) :

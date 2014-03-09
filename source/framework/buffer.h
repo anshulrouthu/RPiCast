@@ -22,22 +22,22 @@
 
 #include "utils.h"
 
-#define VC_BUFFER_MAXSIZE 100*1024 //100 KB of size
+#define VC_BUFFER_MAXSIZE 1024 * 1024 //100 KB of size
 class Buffer
 {
 public:
     Buffer(size_t size = VC_BUFFER_MAXSIZE);
-    ~Buffer();
-    void* GetData();
-    size_t GetSize();
-    size_t GetMaxSize();
-    int GetSamples();
-    VC_STATUS SetSamples(int samples);
-    VC_STATUS SetSize(size_t size);
-    VC_STATUS Reset();
-    VC_STATUS WriteData(void* buf, size_t size);
-    BUF_TAG GetTag();
-    VC_STATUS SetTag(BUF_TAG tag);
+    virtual ~Buffer();
+    virtual void* GetData();
+    virtual size_t GetSize();
+    virtual size_t GetMaxSize();
+    virtual int GetSamples();
+    virtual VC_STATUS SetSamples(int samples);
+    virtual VC_STATUS SetSize(size_t size);
+    virtual VC_STATUS Reset();
+    virtual VC_STATUS WriteData(void* buf, size_t size);
+    virtual BUF_TAG GetTag();
+    virtual VC_STATUS SetTag(BUF_TAG tag);
 
 private:
     const char* c_str()

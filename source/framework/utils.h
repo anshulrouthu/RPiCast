@@ -21,6 +21,7 @@
 #define UTILS_H_
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <iostream>
@@ -120,6 +121,7 @@ typedef enum
 {
     VC_CAPTURE_DEVICE = 0,
     VC_AUDIO_PROCESSOR,
+    VC_VIDEO_ENCODER,
     VC_FLAC_DEVICE,
     VC_CURL_DEVICE,
     VC_TEXT_PROCESSOR,

@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
         AutoMutex automutex(&mutex);
         DBGPRINT(LEVEL_ALWAYS, ("Mutex held by %s\n", __FUNCTION__));
         wakeup = true;
-        DBGPRINT(LEVEL_ALWAYS, ("Wake up the thread\n", __FUNCTION__));
+        DBGPRINT(LEVEL_ALWAYS, ("Wake up the thread\n"));
         cv.Notify();
     }
 
