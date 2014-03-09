@@ -1,15 +1,28 @@
 
-CC= g++
-CFLAGS=-Wall -g -O2
-TARGET=rpicast-server rpicast-client
-SRC=./source
-SAMPLES=./samples/*.cpp
-BIN=bin
+# use pkg-config for getting CFLAGS and LDLIBS
+
+INCLUDE= -I/usr/local/include
+FFMPEG_LIBS=    libavdevice                        \
+                libavformat                        \
+                libavfilter                        \
+                libavcodec                         \
+                libswresample                      \
+                libswscale                         \
+                libavutil                          \
+
+#CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
+LDLIBS:= $(shell pkg-config --libs $(FFMPEG_LIBS)) $(LDLIBS)
+
+CC:=g++
+CFLAGS:=$(CFLAGS) -Wall -g -O2
+TARGET:=rpicast-server rpicast-client
+SRC:=./source
+SAMPLES:=./samples/*.cpp
+BIN:=bin
 INCLUDE=
-LIBS= -lcurl -lUnitTest++ -lpthread
-TMP=tmp
-INC=-Itarget/include/ -Isource/components/ -Isource/framework/ -Isource/osapi/
-LDPATH= -Ltarget/lib/
+LDLIBS:=$(LDLIBS) -lcurl -lUnitTest++ -lpthread
+INC:=-Itarget/include/ -Isource/components/ -Isource/framework/ -Isource/osapi/
+LDPATH:=-Ltarget/lib/
 
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=source/main/console_command.cpp    
@@ -26,12 +39,15 @@ bin:
 	@mkdir -p $@
 	
 $(TARGET):source/main/console_command.o $(OBJS) 
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LIBS)
+	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 ############ ----- build samples ----- ##############
 
 .PHONY: sample
-sample:
+sample: screencapture
+
+screencapture: samples/screencapture.o $(OBJS)
+	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)	   	
 						   	
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
@@ -42,10 +58,10 @@ sample:
 tests: unittests test_osapi 
 	   	
 unittests: source/tests/unittests.o $(OBJS)
-	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LIBS)
+	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 test_osapi: source/tests/test_osapi.o $(OBJS)
-	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LIBS)
+	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 .PHONY: clean
 clean:
