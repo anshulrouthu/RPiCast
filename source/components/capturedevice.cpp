@@ -88,9 +88,10 @@ VC_STATUS CaptureDevice::Initialize()
     avcodec_register_all();
     avdevice_register_all();
 
-    av_dict_set(&options, "framerate", "60", 0);
+    //av_dict_set(&options, "framerate", "60", 0);
     av_dict_set(&options, "video_size", "1920x1080", 0);
-    av_dict_set(&options, "qscale", "1", 0);
+    av_dict_set(&options, "pix_fmt", "yuv420p", 0);
+    av_dict_set(&options, "qscale:v", "1", 0);
 
     avfmt = av_find_input_format("x11grab");
 

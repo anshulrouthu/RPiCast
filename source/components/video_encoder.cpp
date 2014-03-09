@@ -6,7 +6,6 @@
  */
 
 #include "video_encoder.h"
-uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
 VideoEncoder::VideoEncoder(std::string name) :
     ADevice(name)
@@ -40,12 +39,15 @@ VC_STATUS VideoEncoder::Initialize()
 
     /* put sample parameters */
     m_encodeCtx->bit_rate = 400000;
+    m_encodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
     m_encodeCtx->width = 1920;
     m_encodeCtx->height = 1080;
     m_encodeCtx->time_base = (AVRational ) { 1, 60 };
-    m_encodeCtx->gop_size = 10;
+    m_encodeCtx->gop_size = 45;
     m_encodeCtx->max_b_frames = 1;
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    m_encodeCtx->qmin = 1;
+    m_encodeCtx->qmax = 1;
 
     DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s",
         codec->long_name);
@@ -106,17 +108,18 @@ VC_STATUS VideoEncoder::Notify(VC_EVENT* evt)
 
 void VideoEncoder::Task()
 {
+    DBG_TRACE("Enter");
+
     int got_output;
     int err;
     AVPacket pkt;
 
     av_init_packet(&pkt);
-    pkt.data = NULL;    // packet data will be allocated by the encoder
+    pkt.data = NULL;
     pkt.size = 0;
 
     while (m_state)
     {
-
         if (m_input->IsBufferAvailable())
         {
             Buffer* inbuf = m_input->GetFilledBuffer();
@@ -132,7 +135,6 @@ void VideoEncoder::Task()
                 outbuf->WriteData(pkt.data, pkt.size);
                 av_free_packet(&pkt);
             }
-
             /* get the delayed frames */
             for (int i = 0, got_output = 1; got_output; i++)
             {
@@ -145,9 +147,6 @@ void VideoEncoder::Task()
                     av_free_packet(&pkt);
                 }
             }
-
-            /* add sequence end code to have a real mpeg file */
-            outbuf->WriteData(endcode, sizeof(endcode));
 
             m_output->PushBuffer(outbuf);
             m_input->RecycleBuffer(inbuf);
