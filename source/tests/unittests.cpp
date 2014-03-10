@@ -20,7 +20,9 @@
 #include "utils.h"
 #include <UnitTest++.h>
 #include "basepipe.h"
+#include "av_pipe.h"
 #include "file_io.h"
+#include "socket_io.h"
 
 class TestDevice: public ADevice
 {
@@ -218,7 +220,7 @@ TEST(FileIOTEST)
     FILE* fp;
     char c[12];
     fp = fopen("FileSink.out", "rb");
-    CHECK_EQUAL(fread(c, 1, 12, fp),(uint32_t)12);
+    CHECK_EQUAL(fread(c, 1, 12, fp), (uint32_t )12);
     CHECK(!memcmp(c, "VoiceCommand", 12));
 
     fclose(fp);
@@ -228,9 +230,113 @@ TEST(FileIOTEST)
 
 }
 
+TEST(SocketIOTest)
+{
+    DBGPRINT(LEVEL_ALWAYS, ("Testing SocketIOTest\n"));
+    InputPort* input = new SocketInput("Socket Input", NULL, "127.0.0.1", 9000);
+    OutputPort* output1 = new SocketOutput("Socket Output1", NULL,  "127.0.0.1", 9000);
+
+    Buffer* buf = output1->GetBuffer();
+    CHECK(!!buf);
+    buf->WriteData((void*) "RPiCast Test1", 13);
+    output1->PushBuffer(buf);
+    buf = NULL;
+
+    while (!input->IsBufferAvailable())
+        ;
+
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK(!memcmp(buf->GetData(), "RPiCast Test1", 13));
+    input->RecycleBuffer(buf);
+    buf = NULL;
+
+    delete output1;
+
+    OutputPort* output2 = new SocketOutput("Socket Output1", NULL,  "127.0.0.1", 9000);
+    buf = output2->GetBuffer();
+    CHECK(!!buf);
+    buf->WriteData((void*) "RPiCast Test2", 13);
+    output2->PushBuffer(buf);
+
+    while (!input->IsBufferAvailable())
+        ;
+
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK(!memcmp(buf->GetData(), "RPiCast Test2", 13));
+    input->RecycleBuffer(buf);
+    buf = NULL;
+
+    delete output2;
+    delete input;
 }
-int main()
+
+TEST(SocketIODeviceTest)
+{
+    DBGPRINT(LEVEL_ALWAYS, ("Testing SocketIODeviceTest\n"));
+
+    BasePipe* pipe = new AVPipe("AvPipe");
+    ADevice* server = pipe->GetDevice(VC_SOCKET_RECEIVER, "SocketReceiver");
+    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter");
+
+    InputPort* input = new InputPort("Input", NULL);
+    OutputPort* output = new OutputPort("Output", NULL);
+
+    server->Initialize();
+    client->Initialize();
+
+    pipe->ConnectPorts(client->Input(),output);
+    pipe->ConnectPorts(input, server->Output());
+
+    CHECK_EQUAL(server->SendCommand(VC_CMD_START), VC_SUCCESS);
+    CHECK_EQUAL(client->SendCommand(VC_CMD_START), VC_SUCCESS);
+
+    Buffer* buf = output->GetBuffer();
+    CHECK(!!buf);
+    buf->WriteData((void*) "RPiCast Test1", 13);
+    output->PushBuffer(buf);
+    buf = NULL;
+
+    while (!input->IsBufferAvailable());
+
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK(!memcmp(buf->GetData(), "RPiCast Test1", 13));
+    input->RecycleBuffer(buf);
+    buf = NULL;
+
+    client->SendCommand(VC_CMD_STOP);
+    server->SendCommand(VC_CMD_STOP);
+
+
+    pipe->DisconnectPorts(client->Input(),output);
+    pipe->DisconnectPorts(input, server->Output());
+
+    server->Uninitialize();
+    client->Uninitialize();
+
+    delete server;
+    delete client;
+    delete input;
+    delete output;
+}
+}
+int main(int argc, char* argv[])
 {
     DebugSetLevel(1);
+    int c;
+    while ((c = getopt(argc, argv, "sf?l:d:t:")) != -1)
+    {
+        switch (c)
+        {
+        case 'd':
+            DebugSetLevel(strtol(optarg, NULL, 10));
+            break;
+        default:
+            break;
+        }
+    }
+
     return (UnitTest::RunAllTests());
 }

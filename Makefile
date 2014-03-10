@@ -55,10 +55,16 @@ $(TARGET):source/main/console_command.o $(OBJS)
 ############ ----- build samples ----- ##############
 
 .PHONY: sample
-sample: screencapture
+sample: screencapture socket_server socket_client
 
 screencapture: samples/screencapture.o $(OBJS)
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)	   	
+	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+
+socket_server: samples/socket_server.o $(OBJS)
+	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+
+socket_client: samples/socket_client.o $(OBJS)
+	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 						   	
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(INC) -c $< -o $@
@@ -66,13 +72,16 @@ screencapture: samples/screencapture.o $(OBJS)
 ############ ----- build tests ----- ##############
 
 .PHONY: tests
-tests: unittests test_osapi 
+tests: unittests test_osapi test_socket
 	   	
 unittests: source/tests/unittests.o $(OBJS)
 	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 test_osapi: source/tests/test_osapi.o $(OBJS)
 	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+
+test_socket: source/tests/test_socket.o $(OBJS)
+        $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 .PHONY: clean
 clean:

@@ -114,7 +114,8 @@ typedef enum
 
 typedef enum
 {
-    VC_CMD_START = 0, VC_CMD_STOP
+    VC_CMD_START = 0,
+    VC_CMD_STOP
 } VC_CMD;
 
 typedef enum
@@ -127,7 +128,9 @@ typedef enum
     VC_TEXT_PROCESSOR,
     VC_COMMAND_PROCESSOR,
     VC_FILESINK_DEVICE,
-    VC_FILESRC_DEVICE
+    VC_FILESRC_DEVICE,
+    VC_SOCKET_RECEIVER,
+    VC_SOCKET_TRANSMITTER
 
 } VC_DEVICETYPE;
 

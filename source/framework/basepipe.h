@@ -36,22 +36,25 @@ class InputPort
 
 public:
     InputPort(std::string name, ADevice* device);
-    ~InputPort();
+    virtual ~InputPort();
 
-    Buffer* GetFilledBuffer();
-    Buffer* GetEmptyBuffer();
-    bool IsBufferAvailable();
-    VC_STATUS RecycleBuffer(Buffer* buf);
-    VC_STATUS ReceiveBuffer(Buffer* buf);
+    virtual Buffer* GetFilledBuffer();
+    virtual Buffer* GetEmptyBuffer();
+    virtual bool IsBufferAvailable();
+    virtual VC_STATUS RecycleBuffer(Buffer* buf);
+    virtual VC_STATUS ReceiveBuffer(Buffer* buf);
     const char* c_str()
     {
         return (m_name.c_str());
     }
+
+protected:
+    ADevice* m_device;
+
 private:
     std::list<Buffer*> m_buffers;
     std::list<Buffer*> m_processbuf;
     std::string m_name;
-    ADevice* m_device;
     Mutex m_queue_mutex;
 
 };
@@ -64,20 +67,23 @@ class OutputPort
     friend class BasePipe;
 public:
     OutputPort(std::string name, ADevice* device);
-    ~OutputPort()
+    virtual ~OutputPort()
     {
     }
-    VC_STATUS PushBuffer(Buffer* buf);
-    Buffer* GetBuffer();
-    VC_STATUS SetReceiver(InputPort* inport);
-    VC_STATUS ReturnBuffer(Buffer* buf);
+    virtual VC_STATUS PushBuffer(Buffer* buf);
+    virtual Buffer* GetBuffer();
+    virtual VC_STATUS SetReceiver(InputPort* inport);
+    virtual VC_STATUS ReturnBuffer(Buffer* buf);
     const char* c_str()
     {
         return (m_name.c_str());
     }
+
+protected:
+    ADevice* m_device;
+
 private:
     std::string m_name;
-    ADevice* m_device;
     InputPort* m_receiver;
 };
 
@@ -250,7 +256,7 @@ public:
     /**
      * Get the inputport of the device
      */
-    virtual InputPort* Input(int portno)
+    virtual InputPort* Input(int portno = 0)
     {
         return (NULL);
     }
@@ -258,7 +264,7 @@ public:
     /**
      * Get the output port of the device
      */
-    virtual OutputPort* Output(int portno)
+    virtual OutputPort* Output(int portno = 0)
     {
         return (NULL);
     }

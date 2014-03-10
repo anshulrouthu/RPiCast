@@ -93,8 +93,8 @@ VC_STATUS BasePipe::DisconnectPorts(InputPort* input, OutputPort* output)
  * @param device this input port belongs to
  */
 InputPort::InputPort(std::string name, ADevice* device) :
-    m_name(name),
-    m_device(device)
+    m_device(device),
+    m_name(name)
 {
     DBG_TRACE("Enter");
     for (int i = 0; i < NUM_OF_BUFFERS; i++)
@@ -202,8 +202,8 @@ bool InputPort::IsBufferAvailable()
  * @param device this output port belongs to
  */
 OutputPort::OutputPort(std::string name, ADevice* device) :
-    m_name(name),
     m_device(device),
+    m_name(name),
     m_receiver(NULL)
 {
 }
