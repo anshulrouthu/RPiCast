@@ -21,8 +21,10 @@ SAMPLES:=./samples/*.cpp
 BIN:=bin
 INCLUDE=
 LDLIBS:=-lcurl -lUnitTest++ $(FFMPEGLIBS)
+
+############ ----- Project include paths ----- ##############
 INC:=-Itarget/include/                                 \
-     -Isource/osapi/                         \
+     -Isource/osapi/                                   \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
      -Isource/porting_layers/av_pipe/
@@ -31,7 +33,7 @@ INC:=-Itarget/include/                                 \
 LDPATH:=-Ltarget/lib/
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=source/main/console_command.cpp    
+MAINFILES:=source/main/console_command.cpp
            
 OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp)              \
                                                        $(wildcard source/framework/*.cpp)                              \
@@ -55,7 +57,9 @@ $(TARGET):source/main/console_command.o $(OBJS)
 ############ ----- build samples ----- ##############
 
 .PHONY: sample
-sample: screencapture socket_server socket_client
+sample: screencapture     \
+        socket_server     \
+        socket_client
 
 screencapture: samples/screencapture.o $(OBJS)
 	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
@@ -72,7 +76,10 @@ socket_client: samples/socket_client.o $(OBJS)
 ############ ----- build tests ----- ##############
 
 .PHONY: tests
-tests: unittests test_osapi test_socket
+tests: unittests            \
+       test_osapi           \
+       test_socket          \
+       test_socket_capture
 	   	
 unittests: source/tests/unittests.o $(OBJS)
 	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
@@ -81,7 +88,10 @@ test_osapi: source/tests/test_osapi.o $(OBJS)
 	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 test_socket: source/tests/test_socket.o $(OBJS)
-        $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+	    $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+
+test_socket_capture: source/tests/test_socket_capture.o $(OBJS)
+	    $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
 
 .PHONY: clean
 clean:

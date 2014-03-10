@@ -117,7 +117,7 @@ SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, in
     m_client_handle(0)
 {
     DBG_MSG("Enter");
-    m_handle = socket(2, SOCK_STREAM, IPPROTO_TCP);
+    m_handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     DBG_CHECK(m_handle < 0, return, "Error: Creating socket");
 
     bzero((char *) &m_server_addr, sizeof(m_server_addr));
