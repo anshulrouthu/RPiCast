@@ -18,11 +18,7 @@ BUILD_PATH:=build
 RPATH:=target_cross/usr/lib/
 CC:=g++
 CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
-EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
-        -lavfilter -lpostproc -lavformat -lavcodec      \
-        -ldl -lXv -lva -lXfixes -lXext -lX11 -ljack     \
-        -lasound -lSDL -lx264 -lbz2 -lz -lrt            \
-        -lswresample -lswscale -lavutil -lm
+EXT_LDLIBS:=-lcurl -lUnitTest++ $(FFMPEGLIBS)
 
 EXT_LDPATH:=-Ltarget/lib
 LDFLAGS:=-Lbuild/ -lrpicast
@@ -93,7 +89,7 @@ TEST_SRC_DIR:= source/tests
 tests: $(TARGET_LIB) $(TESTS)
 	   	
 $(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
-	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS) -Ltarget/lib -lUnitTest++
+	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) -lUnitTest++
 
 ############ ----- cleaning ----- ##############
 

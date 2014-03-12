@@ -1,7 +1,8 @@
 
 # use pkg-config for getting CFLAGS and LDLIBS
 
-CROSSPREFIX:=arm-linux-gnueabihf-
+TOOLCHAINPATH:=rpi-toolchain/bin
+CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
 FFMPEG_LIBS=    libavdevice                        \
                 libavformat                        \
                 libavfilter                        \
@@ -14,7 +15,7 @@ FFMPEG_LIBS=    libavdevice                        \
 FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 
 BUILD_PATH:=rpi-build
-RPATH:=rpi-target/usr/lib/
+RPATH:=rpi-staging/usr/lib/
 CC:=$(CROSSPREFIX)g++
 CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
 EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
@@ -23,11 +24,11 @@ EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
             -lasound -lSDL -lx264 -lbz2 -lz -lrt            \
             -lswresample -lswscale -lavutil -lm
 
-EXT_LDPATH:=-Lrpi-target/usr/lib
-LDFLAGS:=-Lrpi-build/ -lrpicast
+EXT_LDPATH:=-Lrpi-staging/usr/lib
+LDFLAGS:=-Lrpi-build/ -lrpicast-server
 
 ############ ----- Project include paths ----- ##############
-INC:=-Irpi-target/usr/include/                         \
+INC:=-Irpi-staging/usr/include/                        \
      -Isource/osapi/                                   \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
@@ -43,8 +44,8 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 
 ############ ----- build main application ----- ##############
 
-TARGET:=$(BUILD_PATH)/rpicast
-TARGET_LIB:=$(BUILD_PATH)/librpicast.so
+TARGET:=$(BUILD_PATH)/rpicast-server
+TARGET_LIB:=$(BUILD_PATH)/librpicast-server.so
 
 .PHONY: all
 all: $(BUILD_PATH) libs $(TARGET) sample tests
