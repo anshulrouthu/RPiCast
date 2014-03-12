@@ -10,6 +10,7 @@
 #include <time.h>
 #include<iostream>
 #include<pthread.h>
+#include "osapi.h"
 using namespace std;
 void* readData(void*);
 void* sendData(void*);
@@ -57,7 +58,7 @@ int startClient(char *ptr,int port) {
         exit(0);
     }
     pthread_t read;
-    pthread_create(&read,NULL,readData,(void*)clientSock);
+    OS_THREAD_CREATE(&read,NULL,readData,(void*)clientSock);
     //pthread_create(&send,NULL,sendData,(void*)client);
 
     return 1;

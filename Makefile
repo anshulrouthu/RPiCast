@@ -1,7 +1,8 @@
 
 # use pkg-config for getting CFLAGS and LDLIBS
 
-INCLUDE= -I/usr/local/include
+CROSSPREFIX:=arm-linux-gnueabihf-
+#INCLUDE= -I/usr/local/include
 FFMPEG_LIBS=    libavdevice                        \
                 libavformat                        \
                 libavfilter                        \
@@ -13,14 +14,18 @@ FFMPEG_LIBS=    libavdevice                        \
 #CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
 FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 
+BUILD_PATH:=build
+RPATH:=target_cross/usr/lib/
 CC:=g++
-CFLAGS:=-Wall -g -O2
-TARGET:=rpicast
-SRC:=./source
-SAMPLES:=./samples/*.cpp
-BIN:=bin
-INCLUDE=
-LDLIBS:=-lcurl -lUnitTest++ $(FFMPEGLIBS)
+CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
+EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
+        -lavfilter -lpostproc -lavformat -lavcodec      \
+        -ldl -lXv -lva -lXfixes -lXext -lX11 -ljack     \
+        -lasound -lSDL -lx264 -lbz2 -lz -lrt            \
+        -lswresample -lswscale -lavutil -lm
+
+EXT_LDPATH:=-Ltarget/lib
+LDFLAGS:=-Lbuild/ -lrpicast
 
 ############ ----- Project include paths ----- ##############
 INC:=-Itarget/include/                                 \
@@ -28,9 +33,6 @@ INC:=-Itarget/include/                                 \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
      -Isource/porting_layers/av_pipe/
-
-
-LDPATH:=-Ltarget/lib/
 
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=source/main/console_command.cpp
@@ -42,63 +44,81 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 
 ############ ----- build main application ----- ##############
 
+TARGET:=$(BUILD_PATH)/rpicast
+TARGET_LIB:=$(BUILD_PATH)/librpicast.so
+
 .PHONY: all
-all: bin $(OBJS) $(TARGET) sample tests
-	@echo "Build successful"
+all: $(BUILD_PATH) libs $(TARGET) sample tests
 
-bin: 
-	@mkdir -p $@
+$(BUILD_PATH):
+	          @mkdir -p $@
 	
-objs: $(OBJS)
+.PHONY:libs
+libs: $(TARGET_LIB)
 
-$(TARGET):source/main/console_command.o $(OBJS) 
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+$(TARGET_LIB): $(OBJS)
+	           $(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
+
+$(TARGET): source/main/console_command.o $(TARGET_LIB)
+	       $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
+
+%.o: %.cpp
+	 $(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 ############ ----- build samples ----- ##############
 
+SAMPLES:= $(BUILD_PATH)/screencapture     \
+          $(BUILD_PATH)/socket_server     \
+          $(BUILD_PATH)/socket_client     \
+          $(BUILD_PATH)/hello_world
+
+SAMPLE_SRC_DIR:=samples
+
 .PHONY: sample
-sample: screencapture     \
-        socket_server     \
-        socket_client
+sample: $(TARGET_LIB) $(SAMPLES)
 
-screencapture: samples/screencapture.o $(OBJS)
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
-
-socket_server: samples/socket_server.o $(OBJS)
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
-
-socket_client: samples/socket_client.o $(OBJS)
-	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
-						   	
-%.o: %.cpp
-	$(CC) $(CFLAGS) $(INC) -c $< -o $@
+$(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
+	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 			
 ############ ----- build tests ----- ##############
 
+TESTS:= $(BUILD_PATH)/unittests            \
+        $(BUILD_PATH)/test_osapi           \
+        $(BUILD_PATH)/test_socket          \
+        $(BUILD_PATH)/test_socket_capture
+
+TEST_SRC_DIR:= source/tests
+
 .PHONY: tests
-tests: unittests            \
-       test_osapi           \
-       test_socket          \
-       test_socket_capture
+tests: $(TARGET_LIB) $(TESTS)
 	   	
-unittests: source/tests/unittests.o $(OBJS)
-	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+$(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
+	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS) -Ltarget/lib -lUnitTest++
 
-test_osapi: source/tests/test_osapi.o $(OBJS)
-	   	$(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
-
-test_socket: source/tests/test_socket.o $(OBJS)
-	    $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
-
-test_socket_capture: source/tests/test_socket_capture.o $(OBJS)
-	    $(CC) $(CFLAGS) $(LDPATH) $^ -o $(BIN)/$@ $(LDLIBS)
+############ ----- cleaning ----- ##############
 
 .PHONY: clean
 clean:
+	 @rm -f source/framework/*.o                 \
+	        source/osapi/*.o                     \
+	        source/main/*.o                      \
+	        source/porting_layers/av_pipe/*.o    \
+	        source/porting_layers/components/*.o \
+	        source/tests/*.o                     \
+	        samples/*.o
+
+.PHONY:distclean
+distclean:
 	 @echo "Cleaning files..."
 	 @rm -f source/framework/*.o                 \
 	        source/osapi/*.o                     \
 	        source/main/*.o                      \
 	        source/porting_layers/av_pipe/*.o    \
 	        source/porting_layers/components/*.o \
-	        source/tests/*.o
+	        source/tests/*.o                     \
+	        samples/*.o                          \
+	        $(TARGET)                            \
+	        $(TARGET_LIB)                        \
+	        $(BUILD_PATH)/*
+
+cross-build: clean  

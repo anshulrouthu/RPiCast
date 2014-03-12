@@ -18,6 +18,7 @@
 #include <time.h>
 #include<iostream>
 #include<pthread.h>
+#include "osapi.h"
 using namespace std;
 void *startServer(void*);
 void *readMessage(void*);
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 	long port;
 	cout << "Enter the port number to listen:";
 	cin >> port;
-	pthread_create(&server, NULL, startServer, (void*) port);
+	OS_THREAD_CREATE(&server, NULL, startServer, (void*) port);
 	while (true) {
 		scanf("%s", message);
 		if (!strcmp(message, "exit")){
@@ -58,7 +59,7 @@ void *startServer(void *ptr) {
 	while (1) {
 		clientSock = accept(serverSock, (struct sockaddr*) NULL, NULL);
 		cout<<"A new client connection";
-		pthread_create(&readMsg[noClient],NULL,readMessage,(void*)clientSock);
+		OS_THREAD_CREATE(&readMsg[noClient],NULL,readMessage,(void*)clientSock);
 		noClient++;
 		//snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
 		sleep(1);
