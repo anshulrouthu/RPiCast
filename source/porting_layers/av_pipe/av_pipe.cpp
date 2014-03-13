@@ -12,7 +12,7 @@ AVPipe::AVPipe(std::string name) :
 {
 }
 
-ADevice* AVPipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* filename)
+ADevice* AVPipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* args)
 {
     DBG_TRACE("Enter");
     switch (devtype)
@@ -34,15 +34,15 @@ ADevice* AVPipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* 
     case VC_COMMAND_PROCESSOR:
         break;
     case VC_FILESINK_DEVICE:
-        return (new FileSink(name, filename));
+        return (new FileSink(name, args));
         break;
     case VC_FILESRC_DEVICE:
-        return (new FileSrc(name, filename));
+        return (new FileSrc(name, args));
         break;
     case VC_SOCKET_RECEIVER:
         return (new SocketInDevice(name, this));
     case VC_SOCKET_TRANSMITTER:
-        return (new SocketOutDevice(name, this));
+        return (new SocketOutDevice(name, this, args));
     default:
         break;
     }

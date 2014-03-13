@@ -79,7 +79,8 @@ VC_STATUS SocketInDevice::SendCommand(VC_CMD cmd)
 SocketOutDevice::SocketOutDevice(std::string name, BasePipe* pipe, const char* addr) :
     SocketDevice(name, pipe),
     m_socket_output(NULL ),
-    m_server_addr(addr)
+    m_server_addr(addr),
+    m_device_ready(false)
 {
     DBG_MSG("Enter");
 }
@@ -87,11 +88,14 @@ SocketOutDevice::SocketOutDevice(std::string name, BasePipe* pipe, const char* a
 VC_STATUS SocketOutDevice::SendCommand(VC_CMD cmd)
 {
     DBG_MSG("Enter");
+
+    AutoMutex automutex(&m_mutex);
     switch (cmd)
     {
     case VC_CMD_START:
-        m_socket_output = new SocketOutput(m_name + "_Input", this);
+        m_socket_output = new SocketOutput(m_name + "_Input", this, m_server_addr);
         DBG_CHECK(!m_socket_output, return (VC_FAILURE), "Error: Creating socket out device");
+        m_device_ready = true;
         break;
     case VC_CMD_STOP:
         delete m_socket_output;
@@ -102,7 +106,9 @@ VC_STATUS SocketOutDevice::SendCommand(VC_CMD cmd)
 
 VC_STATUS SocketOutDevice::Notify(VC_EVENT* evt)
 {
-    while (Input()->IsBufferAvailable())
+    AutoMutex automutex(&m_mutex);
+
+    while (Input()->IsBufferAvailable() && m_device_ready)
     {
         Buffer* buf = Input()->GetFilledBuffer();
         m_socket_output->PushBuffer(buf);
@@ -127,7 +133,7 @@ SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, in
 
     int err = bind(m_handle, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
     DBG_CHECK(err < 0, return, "Error(%d): Unable to bind socket", err);
-    listen(m_handle, 5);
+    listen(m_handle, 1);
 
     Start();
 }
@@ -219,7 +225,7 @@ SocketOutput::SocketOutput(std::string name, ADevice* device, const char* addr, 
     m_server_handle(0),
     m_connected(false)
 {
-    DBG_MSG("Enter");
+    DBG_MSG("Connecting to:%s", addr);
     int err;
 
     m_handle = socket(2, SOCK_STREAM, IPPROTO_TCP);
@@ -256,7 +262,7 @@ Buffer* SocketOutput::GetBuffer()
 VC_STATUS SocketOutput::PushBuffer(Buffer* buf)
 {
     size_t bytes = write(m_handle, buf->GetData(), buf->GetSize());
-    DBG_CHECK(bytes != buf->GetSize(), return (VC_FAILURE), "Error: Write data incomplete");
+    DBG_CHECK(bytes != buf->GetSize(), return (VC_FAILURE), "Error: Data sent incomplete");
     return (VC_SUCCESS);
 }
 

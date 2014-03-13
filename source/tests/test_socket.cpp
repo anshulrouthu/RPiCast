@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
     BasePipe* pipe = new AVPipe("AvPipe");
     ADevice* server = pipe->GetDevice(VC_SOCKET_RECEIVER, "SocketReceiver");
-    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter");
+    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter", "127.0.0.1");
     ADevice* fsink = new FileSink("FileIO FileSink", "socket_test.out");
     ADevice* fsrc = new FileSrc("FileIO FileSrc", "socket_test_src.out");
 

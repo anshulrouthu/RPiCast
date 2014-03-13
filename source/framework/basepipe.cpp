@@ -15,7 +15,7 @@
 /**
  * Number of input buffers
  */
-#define NUM_OF_BUFFERS 64
+#define NUM_OF_BUFFERS 16
 
 /**
  * APipe constructor
@@ -32,7 +32,7 @@ BasePipe::BasePipe(std::string name) :
  * @param[in] name of the device to be names for identification
  * @return device instance of the device available based on type
  */
-ADevice* BasePipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* filename)
+ADevice* BasePipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* args)
 {
     DBG_TRACE("Enter");
     return (NULL);
@@ -94,7 +94,8 @@ VC_STATUS BasePipe::DisconnectPorts(InputPort* input, OutputPort* output)
  */
 InputPort::InputPort(std::string name, ADevice* device) :
     m_device(device),
-    m_name(name)
+    m_name(name),
+    m_queue_cv(m_queue_mutex)
 {
     DBG_TRACE("Enter");
     for (int i = 0; i < NUM_OF_BUFFERS; i++)
@@ -136,10 +137,12 @@ Buffer* InputPort::GetFilledBuffer()
 Buffer* InputPort::GetEmptyBuffer()
 {
     DBG_TRACE("Enter");
+    AutoMutex automutex(&m_queue_mutex);
     while (m_buffers.size() == 0)
     {
         //this should not happen or we starve for buffer
-        DBG_ERR("Low on Buffers");
+        DBG_ERR("Waiting for buffers");
+        m_queue_cv.Wait();
     }
 
     Buffer* buf = m_buffers.front();
@@ -155,8 +158,10 @@ Buffer* InputPort::GetEmptyBuffer()
 VC_STATUS InputPort::RecycleBuffer(Buffer* buf)
 {
     DBG_TRACE("Enter");
+    AutoMutex automutex(&m_queue_mutex);
     buf->Reset();
     m_buffers.push_back(buf);
+    m_queue_cv.Notify();
     return (VC_SUCCESS);
 }
 
@@ -230,7 +235,7 @@ VC_STATUS OutputPort::SetReceiver(InputPort* inport)
  */
 VC_STATUS OutputPort::PushBuffer(Buffer* buf)
 {
-    DBG_TRACE("Enter");
+    DBG_TRACE("Enter %d",buf->GetSize());
     if (m_receiver)
     {
         return (m_receiver->ReceiveBuffer(buf));

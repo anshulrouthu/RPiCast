@@ -22,7 +22,7 @@
 
 #include "utils.h"
 
-#define VC_BUFFER_MAXSIZE 1024 * 1024 //100 KB of size
+#define VC_BUFFER_MAXSIZE (1024 * 1024) //1 MB of size
 class Buffer
 {
 public:

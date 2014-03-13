@@ -16,8 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define CLIENT_SOCKET_PORT 88888
-#define SERVER_SOCKET_PORT 88889
+#define SOCKET_PORT 88888
 
 class SocketInput;
 class SocketOutput;
@@ -61,12 +60,13 @@ public:
 private:
     OutputPort* m_socket_output;
     const char* m_server_addr;
+    bool m_device_ready;
 };
 
 class SocketInput: public WorkerThread, public InputPort
 {
 public:
-    SocketInput(std::string name, ADevice* device, const char* ip = "127.0.0.1", int port = 8888);
+    SocketInput(std::string name, ADevice* device, const char* ip = "127.0.0.1", int port = SOCKET_PORT);
     virtual ~SocketInput();
     virtual Buffer* GetEmptyBuffer();
     virtual VC_STATUS ReceiveBuffer(Buffer* buf);
@@ -84,7 +84,7 @@ private:
 class SocketOutput: public OutputPort
 {
 public:
-    SocketOutput(std::string name, ADevice* device, const char* ip = "127.0.0.1", int port = 8888);
+    SocketOutput(std::string name, ADevice* device, const char* ip = "127.0.0.1", int port = SOCKET_PORT);
     virtual ~SocketOutput();
     virtual VC_STATUS PushBuffer(Buffer* buf);
     virtual Buffer* GetBuffer();

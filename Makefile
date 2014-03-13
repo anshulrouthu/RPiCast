@@ -31,7 +31,7 @@ INC:=-Itarget/include/                                 \
      -Isource/porting_layers/av_pipe/
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=source/main/console_command.cpp
+MAINFILES:=source/main/rpicast.cpp source/main/rpicast-server.cpp
            
 OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp)              \
                                                        $(wildcard source/framework/*.cpp)                              \
@@ -41,10 +41,11 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 ############ ----- build main application ----- ##############
 
 TARGET:=$(BUILD_PATH)/rpicast
+TARGET_SERVER:=$(BUILD_PATH)/rpicast-server
 TARGET_LIB:=$(BUILD_PATH)/librpicast.so
 
 .PHONY: all
-all: $(BUILD_PATH) libs $(TARGET) sample tests
+all: $(BUILD_PATH) libs $(TARGET) $(TARGET_SERVER) sample tests
 
 $(BUILD_PATH):
 	          @mkdir -p $@
@@ -55,9 +56,11 @@ libs: $(TARGET_LIB)
 $(TARGET_LIB): $(OBJS)
 	           $(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
 
-$(TARGET): source/main/console_command.o $(TARGET_LIB)
+$(TARGET): source/main/rpicast.o $(TARGET_LIB)
 	       $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 
+$(TARGET_SERVER): source/main/rpicast-server.o $(TARGET_LIB)
+	       $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 %.o: %.cpp
 	 $(CC) $(CFLAGS) $(INC) -c $< -o $@
 
@@ -123,13 +126,13 @@ cross-tests: clean
 	        $(MAKE) -f Makefile-cross tests	clean
 
 cross-samples: clean
-	         $(MAKE) -f Makefile-cross samples clean
+	        $(MAKE) -f Makefile-cross samples clean
 	        
 cross-libs: clean
-	       $(MAKE) -f Makefile-cross libs clean
+	        $(MAKE) -f Makefile-cross libs clean
 	       
 cross-distclean: clean
-	       $(MAKE) -f Makefile-cross distclean clean
+	        $(MAKE) -f Makefile-cross distclean clean
 
 cross-all: clean
-	         $(MAKE) -f Makefile-cross all clean
+	        $(MAKE) -f Makefile-cross all clean

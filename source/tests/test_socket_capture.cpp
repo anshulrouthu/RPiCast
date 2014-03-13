@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     ADevice* capture = pipe->GetDevice(VC_CAPTURE_DEVICE, "VIdCapture");
     ADevice* encoder = pipe->GetDevice(VC_VIDEO_ENCODER,"VidEncoder");
     ADevice* server = pipe->GetDevice(VC_SOCKET_RECEIVER, "SocketReceiver");
-    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter");
+    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter","127.0.0.1");
     ADevice* fsink = new FileSink("FileIO FileSink", "socket_video.out");
 
     capture->Initialize();

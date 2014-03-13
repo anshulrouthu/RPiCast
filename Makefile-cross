@@ -3,21 +3,11 @@
 
 TOOLCHAINPATH:=rpi-toolchain/bin
 CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
-FFMPEG_LIBS=    libavdevice                        \
-                libavformat                        \
-                libavfilter                        \
-                libavcodec                         \
-                libswresample                      \
-                libswscale                         \
-                libavutil                          \
-
-#CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
-FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
-
 BUILD_PATH:=rpi-build
 RPATH:=rpi-staging/usr/lib/
 CC:=$(CROSSPREFIX)g++
 CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
+
 EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
             -lavfilter -lpostproc -lavformat -lavcodec      \
             -ldl -lXv -lva -lXfixes -lXext -lX11 -ljack     \
@@ -35,7 +25,7 @@ INC:=-Irpi-staging/usr/include/                        \
      -Isource/porting_layers/av_pipe/
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=source/main/console_command.cpp
+MAINFILES:=source/main/rpicast-server.cpp
            
 OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp)              \
                                                        $(wildcard source/framework/*.cpp)                              \
@@ -57,9 +47,9 @@ $(BUILD_PATH):
 libs: $(TARGET_LIB)
 
 $(TARGET_LIB): $(OBJS)
-	           $(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
+	           $(CC) $(CFLAGS) -fpic -shared $^ -o $@ $(EXT_LDPATH) $(EXT_LDLIBS)
 
-$(TARGET): source/main/console_command.o $(TARGET_LIB)
+$(TARGET): source/main/rpicast-server.o
 	       $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS)
 
 %.o: %.cpp

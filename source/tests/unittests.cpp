@@ -278,7 +278,7 @@ TEST(SocketIODeviceTest)
 
     BasePipe* pipe = new AVPipe("AvPipe");
     ADevice* server = pipe->GetDevice(VC_SOCKET_RECEIVER, "SocketReceiver");
-    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter");
+    ADevice* client = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTransmitter", "127.0.0.1");
 
     InputPort* input = new InputPort("Input", NULL);
     OutputPort* output = new OutputPort("Output", NULL);

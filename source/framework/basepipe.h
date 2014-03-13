@@ -56,6 +56,7 @@ private:
     std::list<Buffer*> m_processbuf;
     std::string m_name;
     Mutex m_queue_mutex;
+    ConditionVariable m_queue_cv;
 
 };
 
@@ -117,7 +118,7 @@ public:
     /**
      * Query the pipe for available devices
      */
-    virtual ADevice* GetDevice(VC_DEVICETYPE dev, std::string name, const char* filename = "");
+    virtual ADevice* GetDevice(VC_DEVICETYPE dev, std::string name, const char* args = "");
 
     /**
      * Connects the devices to their default ports i.e port 0
