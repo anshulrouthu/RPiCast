@@ -53,6 +53,7 @@ public:
     virtual ~FileSrc();
 
     virtual VC_STATUS Initialize();
+    virtual VC_STATUS Uninitialize();
     virtual OutputPort* Output(int portno);
     virtual VC_STATUS SendCommand(VC_CMD cmd);
 

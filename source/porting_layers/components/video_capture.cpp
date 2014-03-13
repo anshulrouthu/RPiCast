@@ -242,7 +242,7 @@ void VideoCapture::Task()
                     avpicture_fill((AVPicture *) yuv_frame, buffer, AV_PIX_FMT_YUV420P, MAX_DEFAULT_WIDTH, MAX_DEFAULT_HEIGHT);
                     /* convert frame in to yuv */
                     sws_scale(swsCtx, (const uint8_t * const *) bgr_frame->data, bgr_frame->linesize, 0, MAX_DEFAULT_HEIGHT, yuv_frame->data, yuv_frame->linesize);
-                    yuv_frame->pts = AV_NOPTS_VALUE;
+                    yuv_frame->pts = pts;// = AV_NOPTS_VALUE;
                     m_output->PushBuffer(buf);
                 }
                 av_free_packet(&packet);
@@ -250,7 +250,7 @@ void VideoCapture::Task()
         }
 
         AutoMutex automutex(&m_mutex);
-        m_cv.Wait(200);
+        m_cv.Wait(5);
     }
 
     av_free(bgr_frame);

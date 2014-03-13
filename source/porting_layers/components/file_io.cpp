@@ -140,8 +140,6 @@ FileSrc::FileSrc(std::string name, const char* in_file) :
 
 FileSrc::~FileSrc()
 {
-    fclose(m_file);
-    delete m_output;
 }
 
 VC_STATUS FileSrc::Initialize()
@@ -150,6 +148,13 @@ VC_STATUS FileSrc::Initialize()
     m_output = new OutputPort("FileSrc Output", this);
     m_file = fopen(m_filename, "rb");
     DBG_CHECK(!m_file, return (VC_FAILURE), "Error opening file %s", m_filename);
+    return (VC_SUCCESS);
+}
+
+VC_STATUS FileSrc::Uninitialize()
+{
+    fclose(m_file);
+    delete m_output;
     return (VC_SUCCESS);
 }
 
@@ -183,7 +188,7 @@ void FileSrc::Task()
     while (m_state)
     {
         Buffer* buf = m_output->GetBuffer();
-        size_t size = fread(buf->GetData(), 1, 1024, m_file);
+        size_t size = fread(buf->GetData(), 1, buf->GetMaxSize(), m_file);
 
         DBG_TRACE("Size of data read %d", size);
 
@@ -199,6 +204,7 @@ void FileSrc::Task()
             m_output->PushBuffer(buf);
             break;
         }
+        //m_cv.Wait(10);
     }
 
 }

@@ -20,7 +20,6 @@ SocketDevice::~SocketDevice()
 
 VC_STATUS SocketDevice::Initialize()
 {
-    DBG_MSG("Enter");
     m_input = new InputPort("SockDev_Input", this);
     m_output = new OutputPort("SockDev_Output", this);
 
@@ -141,6 +140,8 @@ SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, in
 SocketInput::~SocketInput()
 {
     Stop();
+    shutdown(m_handle,SHUT_RDWR);
+    shutdown(m_client_handle,SHUT_RDWR);
     Join();
     close(m_handle);
     close(m_client_handle);
@@ -154,7 +155,7 @@ void SocketInput::Task()
         socklen_t client_len;
         client_len = sizeof(m_client_addr);
         m_client_handle = accept(m_handle, (struct sockaddr *) &m_client_addr, &client_len);
-        DBG_CHECK(m_client_handle < 0, connected = false, "Error: On connection accept");
+        DBG_CHECK(m_client_handle < 0, connected = false, "Error(%d): On connection accept",m_client_handle);
 
         if (connected)
         {

@@ -46,8 +46,8 @@ VC_STATUS VideoEncoder::Initialize()
     m_encodeCtx->gop_size = 45;
     m_encodeCtx->max_b_frames = 1;
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
-    m_encodeCtx->qmin = 1;
-    m_encodeCtx->qmax = 1;
+    m_encodeCtx->qmin = 3;
+    m_encodeCtx->qmax = 6;
 
     DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s",
         codec->long_name);
@@ -57,10 +57,11 @@ VC_STATUS VideoEncoder::Initialize()
 
 VC_STATUS VideoEncoder::Uninitialize()
 {
-    delete m_input;
-    delete m_output;
 
     avcodec_close(m_encodeCtx);
+
+    delete m_input;
+    delete m_output;
 
     return (VC_SUCCESS);
 }
@@ -74,6 +75,7 @@ VC_STATUS VideoEncoder::SendCommand(VC_CMD cmd)
         break;
     case VC_CMD_STOP:
         Stop();
+        Join();
         break;
     }
     return (VC_SUCCESS);
@@ -135,6 +137,7 @@ void VideoEncoder::Task()
                 outbuf->WriteData(pkt.data, pkt.size);
                 av_free_packet(&pkt);
             }
+
             /* get the delayed frames */
             for (int i = 0, got_output = 1; got_output; i++)
             {
@@ -154,7 +157,10 @@ void VideoEncoder::Task()
         else
         {
             AutoMutex automutex(&m_mutex);
-            m_cv.Wait();
+            while(!m_input->IsBufferAvailable() && m_state)
+            {
+                m_cv.Wait();
+            }
         }
     }
 }

@@ -100,8 +100,8 @@ TEST(ADeviceConnections)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing ADeviceConnections\n"));
     BasePipe* pipe = new BasePipe("Pipe 0");
-    TestDevice* src = new TestDevice("TestDevice Src");
-    TestDevice* dst = new TestDevice("TestDevice Dst");
+    ADevice* src = new TestDevice("TestDevice Src");
+    ADevice* dst = new TestDevice("TestDevice Dst");
 
     CHECK_EQUAL(pipe->c_str(), "Pipe 0");
     CHECK_EQUAL(src->c_str(), "TestDevice Src");
@@ -158,8 +158,8 @@ TEST(FileIOTEST)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing FileIOTEST\n"));
     BasePipe* pipe = new BasePipe("FileIO Pipe 0");
-    FileSink* fsink = new FileSink("FileIO FileSink", "FileSink.out");
-    FileSrc* fsrc = new FileSrc("FileIO FileSrc", "FileSink.out");
+    ADevice* fsink = new FileSink("FileIO FileSink", "FileSink.out");
+    ADevice* fsrc = new FileSrc("FileIO FileSrc", "FileSink.out");
     OutputPort* output = new OutputPort("FileIO Output 0", NULL);
     InputPort* input = new InputPort("FileIO Input 0", NULL);
     Buffer* buf;
@@ -182,10 +182,12 @@ TEST(FileIOTEST)
     CHECK(!!buf);
     CHECK_EQUAL(buf->SetTag(TAG_START), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+
     buf = output->GetBuffer();
     CHECK(!!buf);
     CHECK_EQUAL(buf->WriteData((void* )"VoiceCommand", 12), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+
     buf = output->GetBuffer();
     CHECK(!!buf);
     CHECK_EQUAL(buf->SetTag(TAG_END), VC_SUCCESS);
@@ -193,6 +195,7 @@ TEST(FileIOTEST)
     usleep(100000); // wait for fsink to process buffer
     CHECK_EQUAL(fsink->SendCommand(VC_CMD_STOP), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(fsink->Input(0), output), VC_SUCCESS);
+    fsink->Uninitialize();
     delete fsink;
 
     CHECK_EQUAL(fsrc->SendCommand(VC_CMD_START), VC_SUCCESS);
@@ -201,6 +204,7 @@ TEST(FileIOTEST)
     while (!input->IsBufferAvailable())
         ;
     CHECK(input->IsBufferAvailable());
+
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
     CHECK_EQUAL(buf->GetTag(), TAG_START);
@@ -215,6 +219,7 @@ TEST(FileIOTEST)
     CHECK(!memcmp(buf->GetData(), "VoiceCommand", 12));
     CHECK_EQUAL(fsrc->SendCommand(VC_CMD_STOP), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(input, fsrc->Output(0)), VC_SUCCESS);
+    fsrc->Uninitialize();
     delete fsrc;
 
     FILE* fp;

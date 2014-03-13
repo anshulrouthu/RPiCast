@@ -35,6 +35,14 @@
 #include <string.h>
 #include <list>
 
+extern "C"
+{
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+}
+
 #ifndef NULL
 #define NULL   ((void *) 0)
 #endif
@@ -130,7 +138,8 @@ typedef enum
     VC_FILESINK_DEVICE,
     VC_FILESRC_DEVICE,
     VC_SOCKET_RECEIVER,
-    VC_SOCKET_TRANSMITTER
+    VC_SOCKET_TRANSMITTER,
+    VC_VIDEO_TUNNEL
 
 } VC_DEVICETYPE;
 

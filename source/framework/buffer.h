@@ -39,14 +39,16 @@ public:
     virtual BUF_TAG GetTag();
     virtual VC_STATUS SetTag(BUF_TAG tag);
 
+protected:
+    void* m_data;
+    size_t m_size;
+    BUF_TAG m_tag;
+
 private:
     const char* c_str()
     {
         return ("Buffer");
     }
-    void* m_data;
-    size_t m_size;
-    BUF_TAG m_tag;
     int m_samples;
 
 };

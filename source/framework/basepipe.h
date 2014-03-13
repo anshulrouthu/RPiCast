@@ -203,6 +203,16 @@ public:
      */
     virtual VC_STATUS GetParameters(OutputParams* params)=0;
 
+    /**
+     * Allocate a buffer to requesting member
+     */
+    virtual Buffer* AllocateBuffer(int portno)=0;
+
+    /**
+     * De-allocates the buffer allocated by the device
+     */
+    virtual VC_STATUS FreeBuffer(Buffer* buf)=0;
+
 };
 
 /**
@@ -220,6 +230,7 @@ public:
         m_cv(m_mutex),
         m_pipe(pipe)
     {
+        DBG_MSG("Enter");
     }
 
     /**
@@ -227,6 +238,7 @@ public:
      */
     virtual ~ADevice()
     {
+        DBG_MSG("Enter");
     }
 
     /**
@@ -234,6 +246,7 @@ public:
      */
     virtual VC_STATUS Initialize()
     {
+        DBG_MSG("Initializing %s device", c_str());
         return (VC_NOT_IMPLEMENTED);
     }
 
@@ -242,6 +255,7 @@ public:
      */
     virtual VC_STATUS Uninitialize()
     {
+        DBG_MSG("Uninitializing %s device", c_str());
         return (VC_NOT_IMPLEMENTED);
     }
 
@@ -292,6 +306,24 @@ public:
     virtual VC_STATUS GetParameters(OutputParams* params)
     {
         return (VC_NOT_IMPLEMENTED);
+    }
+
+    /**
+     * Allocate a buffer to requesting member
+     */
+    virtual Buffer* AllocateBuffer(int portno = 0)
+    {
+        return (new Buffer());
+    }
+
+    /**
+     * De-allocates the buffer allocated by the device
+     */
+    virtual VC_STATUS FreeBuffer(Buffer* buf)
+    {
+        buf->Reset();
+        delete buf;
+        return (VC_SUCCESS);
     }
 
     /**

@@ -5,8 +5,11 @@ TOOLCHAINPATH:=rpi-toolchain/bin
 CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
 BUILD_PATH:=rpi-build
 RPATH:=rpi-staging/usr/lib/
-CC:=$(CROSSPREFIX)g++
+CC:=$(CROSSPREFIX)gcc
+CXX:=$(CROSSPREFIX)g++
 CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
+TARGET:=$(BUILD_PATH)/rpicast-server
+TARGET_LIB:=$(BUILD_PATH)/librpicast-server.so
 
 EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
             -lavfilter -lpostproc -lavformat -lavcodec      \
@@ -17,12 +20,28 @@ EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
 EXT_LDPATH:=-Lrpi-staging/usr/lib
 LDFLAGS:=-Lrpi-build/ -lrpicast-server
 
+############ ----- rpi-OpenMax variables ----- ##############
+
+OMXSTAGING:=rpi-staging/openmax
+OMXCFLAGS:=-DSTANDALONE -DARM_CROSS -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX                          \
+           -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE    \
+           -Wall -g -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX        \
+           -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi
+
+OMXLDFLAGS:=-L$(OMXSTAGING)/opt/vc/lib/ -lilclient -lGLESv2 -lEGL -lopenmaxil -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt -lm   \
+            -L$(OMXSTAGING)/opt/vc/src/hello_pi/libs/ilclient/ -L$(OMXSTAGING)/opt/vc/src/hello_pi/libs/vgfont/ 
+            
+OMXINC:=-I$(OMXSTAGING)/opt/vc/include/ -I$(OMXSTAGING)/opt/vc/include/interface/vcos/pthreads                        \
+         -I$(OMXSTAGING)/opt/vc/include/interface/vmcs_host/linux -I$(OMXSTAGING)/opt/vc/src/hello_pi/libs/ilclient   \
+         -I$(OMXSTAGING)/opt/vc/src/hello_pi/libs/vgfont
+
 ############ ----- Project include paths ----- ##############
-INC:=-Irpi-staging/usr/include/                        \
+INC:= $(OMXINC) -Irpi-staging/usr/include/             \
      -Isource/osapi/                                   \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
      -Isource/porting_layers/av_pipe/
+
 
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=source/main/rpicast-server.cpp
@@ -34,9 +53,6 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 
 ############ ----- build main application ----- ##############
 
-TARGET:=$(BUILD_PATH)/rpicast-server
-TARGET_LIB:=$(BUILD_PATH)/librpicast-server.so
-
 .PHONY: all
 all: $(BUILD_PATH) libs $(TARGET) sample tests
 
@@ -47,20 +63,21 @@ $(BUILD_PATH):
 libs: $(TARGET_LIB)
 
 $(TARGET_LIB): $(OBJS)
-	           $(CC) $(CFLAGS) -fpic -shared $^ -o $@ $(EXT_LDPATH) $(EXT_LDLIBS)
+	           $(CXX) $(CFLAGS) -fpic -shared $^ -o $@ $(EXT_LDPATH) $(EXT_LDLIBS)
 
 $(TARGET): source/main/rpicast-server.o
-	       $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS)
+	       $(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 
 %.o: %.cpp
-	 $(CC) $(CFLAGS) $(INC) -c $< -o $@
+	 $(CXX) $(CFLAGS) $(OMXCFLAGS) $(INC) -c $< -o $@
 
 ############ ----- build samples ----- ##############
 
 SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/socket_server     \
           $(BUILD_PATH)/socket_client     \
-          $(BUILD_PATH)/hello_world
+          $(BUILD_PATH)/hello_world       \
+          $(BUILD_PATH)/hello_video
 
 SAMPLE_SRC_DIR:=samples
 
@@ -68,7 +85,7 @@ SAMPLE_SRC_DIR:=samples
 sample: $(TARGET_LIB) $(SAMPLES)
 
 $(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
-	             $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS)
+	             $(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 			
 ############ ----- build tests ----- ##############
 
@@ -83,7 +100,7 @@ TEST_SRC_DIR:= source/tests
 tests: $(TARGET_LIB) $(TESTS)
 	   	
 $(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
-	             $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS)
+	             $(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 
 ############ ----- cleaning ----- ##############
 

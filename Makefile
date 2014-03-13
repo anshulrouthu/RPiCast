@@ -31,7 +31,7 @@ INC:=-Itarget/include/                                 \
      -Isource/porting_layers/av_pipe/
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=source/main/rpicast.cpp source/main/rpicast-server.cpp
+MAINFILES:=source/main/rpicast.cpp source/main/rpicast-server.cpp source/porting_layers/components/video_tunnel.cpp
            
 OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp)              \
                                                        $(wildcard source/framework/*.cpp)                              \
@@ -69,7 +69,8 @@ $(TARGET_SERVER): source/main/rpicast-server.o $(TARGET_LIB)
 SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/socket_server     \
           $(BUILD_PATH)/socket_client     \
-          $(BUILD_PATH)/hello_world
+          $(BUILD_PATH)/hello_world       \
+          $(BUILD_PATH)/sample_sdl
 
 SAMPLE_SRC_DIR:=samples
 
@@ -77,7 +78,7 @@ SAMPLE_SRC_DIR:=samples
 sample: $(TARGET_LIB) $(SAMPLES)
 
 $(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
-	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
+	             $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(FFMPEGLIBS)
 			
 ############ ----- build tests ----- ##############
 
@@ -92,7 +93,7 @@ TEST_SRC_DIR:= source/tests
 tests: $(TARGET_LIB) $(TESTS)
 	   	
 $(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
-	             $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) -lUnitTest++
+	             $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) -lUnitTest++
 
 ############ ----- cleaning ----- ##############
 

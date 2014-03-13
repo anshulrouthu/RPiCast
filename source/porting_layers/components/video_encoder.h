@@ -46,6 +46,7 @@ public:
 private:
     virtual void Task();
 
+    AVFormatContext* m_outCtx;
     AVCodecContext* m_encodeCtx;
     InputPort* m_input;
     OutputPort* m_output;

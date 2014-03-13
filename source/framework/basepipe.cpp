@@ -15,7 +15,7 @@
 /**
  * Number of input buffers
  */
-#define NUM_OF_BUFFERS 16
+#define NUM_OF_BUFFERS 32
 
 /**
  * APipe constructor
@@ -97,7 +97,7 @@ InputPort::InputPort(std::string name, ADevice* device) :
     m_name(name),
     m_queue_cv(m_queue_mutex)
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Enter");
     for (int i = 0; i < NUM_OF_BUFFERS; i++)
     {
         Buffer* buf = new Buffer();

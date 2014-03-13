@@ -13,6 +13,9 @@
 #include "video_encoder.h"
 #include "file_io.h"
 #include "socket_io.h"
+#ifdef ARM_CROSS
+#include "video_tunnel.h"
+#endif
 
 class AVPipe: public BasePipe
 {
