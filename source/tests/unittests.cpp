@@ -28,9 +28,7 @@ class TestDevice: public ADevice
 {
 public:
     TestDevice(std::string name) :
-        ADevice(name),
-        m_inport("Inputport 0", this),
-        m_outport("Outport 0", this)
+        ADevice(name)
     {
     }
 
@@ -40,6 +38,15 @@ public:
 
     virtual VC_STATUS Initialize()
     {
+        m_inport = new InputPort("Inputport 0", this);
+        m_outport = new OutputPort("Outport 0", this);
+        return (VC_SUCCESS);
+    }
+
+    virtual VC_STATUS Uninitialize()
+    {
+        delete m_inport;
+        delete m_outport;
         return (VC_SUCCESS);
     }
 
@@ -50,12 +57,12 @@ public:
 
     virtual InputPort* Input(int portno)
     {
-        return (&m_inport);
+        return (m_inport);
     }
 
     virtual OutputPort* Output(int portno)
     {
-        return (&m_outport);
+        return (m_outport);
     }
 
     virtual VC_STATUS SendCommand(VC_CMD cmd)
@@ -74,8 +81,8 @@ public:
     }
 
 private:
-    InputPort m_inport;
-    OutputPort m_outport;
+    InputPort* m_inport;
+    OutputPort* m_outport;
 
 };
 
@@ -92,6 +99,7 @@ TEST(ADeviceAPIs)
     CHECK(!!src->Output(0));
     CHECK_EQUAL(src->SendCommand(VC_CMD_START), VC_SUCCESS);
     CHECK_EQUAL(src->SendCommand(VC_CMD_STOP), VC_SUCCESS);
+    CHECK_EQUAL(src->Uninitialize(), VC_SUCCESS);
 
     delete src;
 }
@@ -102,6 +110,9 @@ TEST(ADeviceConnections)
     BasePipe* pipe = new BasePipe("Pipe 0");
     ADevice* src = new TestDevice("TestDevice Src");
     ADevice* dst = new TestDevice("TestDevice Dst");
+
+    CHECK_EQUAL(src->Initialize(), VC_SUCCESS);
+    CHECK_EQUAL(dst->Initialize(), VC_SUCCESS);
 
     CHECK_EQUAL(pipe->c_str(), "Pipe 0");
     CHECK_EQUAL(src->c_str(), "TestDevice Src");
@@ -119,6 +130,9 @@ TEST(ADeviceConnections)
     CHECK_EQUAL(pipe->ConnectDevices(src, dst), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectDevices(src, dst), VC_SUCCESS);
 
+    CHECK_EQUAL(src->Uninitialize(), VC_SUCCESS);
+    CHECK_EQUAL(dst->Uninitialize(), VC_SUCCESS);
+
     delete pipe;
     delete src;
     delete dst;
@@ -135,7 +149,6 @@ TEST(InputOutputPorts)
     CHECK_EQUAL(input->c_str(), "InputOutput Input 0");
     CHECK_EQUAL(output->c_str(), "InputOutput Output 0");
 
-    CHECK_EQUAL(!!output->GetBuffer(), !!NULL);
     CHECK_EQUAL(pipe->ConnectPorts(input, output), VC_SUCCESS);
     CHECK_EQUAL(pipe->ConnectPorts(input, output), VC_FAILURE);
     Buffer* buf = output->GetBuffer();

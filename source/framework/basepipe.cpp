@@ -45,7 +45,7 @@ ADevice* BasePipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char
  */
 VC_STATUS BasePipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Connecting devices %s, %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
     return (ConnectPorts(dst->Input(dst_portno), src->Output(src_portno)));
 }
@@ -57,7 +57,7 @@ VC_STATUS BasePipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, i
  */
 VC_STATUS BasePipe::DisconnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Disconnecting devices %s, %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
     return (DisconnectPorts(dst->Input(dst_portno), src->Output(src_portno)));
 }
@@ -209,8 +209,11 @@ bool InputPort::IsBufferAvailable()
 OutputPort::OutputPort(std::string name, ADevice* device) :
     m_device(device),
     m_name(name),
-    m_receiver(NULL)
+    m_receiver(NULL),
+    m_mutex(),
+    m_cv(m_mutex)
 {
+    DBG_MSG("Enter");
 }
 
 /**
@@ -220,9 +223,11 @@ OutputPort::OutputPort(std::string name, ADevice* device) :
 VC_STATUS OutputPort::SetReceiver(InputPort* inport)
 {
     DBG_TRACE("Enter");
+    AutoMutex automutex(&m_mutex);
     if ((m_receiver && !inport) || (!m_receiver && inport))
     {
         m_receiver = inport;
+        m_cv.Notify();
         return (VC_SUCCESS);
     }
     DBG_ERR("Error: Cannot connect receiver");
@@ -235,11 +240,12 @@ VC_STATUS OutputPort::SetReceiver(InputPort* inport)
  */
 VC_STATUS OutputPort::PushBuffer(Buffer* buf)
 {
-    DBG_TRACE("Enter %d",buf->GetSize());
+    DBG_TRACE("Enter");
     if (m_receiver)
     {
         return (m_receiver->ReceiveBuffer(buf));
     }
+    DBG_ERR("Error: No receiver set");
     return (VC_FAILURE);
 }
 
@@ -250,12 +256,17 @@ VC_STATUS OutputPort::PushBuffer(Buffer* buf)
 Buffer* OutputPort::GetBuffer()
 {
     DBG_TRACE("Enter");
-    if (m_receiver)
+    if (!m_receiver)
     {
-        return (m_receiver->GetEmptyBuffer());
+        AutoMutex automutex(&m_mutex);
+        while(!m_receiver)
+        {
+            DBG_ERR("Waiting for receiver");
+            m_cv.Wait();
+        }
     }
 
-    return (NULL);
+    return (m_receiver->GetEmptyBuffer());
 }
 
 /**

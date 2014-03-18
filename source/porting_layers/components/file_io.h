@@ -31,6 +31,7 @@ public:
     virtual ~FileSink();
 
     virtual VC_STATUS Initialize();
+    virtual VC_STATUS Uninitialize();
     virtual VC_STATUS Notify(VC_EVENT* evt);
     virtual InputPort* Input(int portno);
     virtual OutputPort* Output(int portno);

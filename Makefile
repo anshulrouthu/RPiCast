@@ -69,8 +69,7 @@ $(TARGET_SERVER): source/main/rpicast-server.o $(TARGET_LIB)
 SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/socket_server     \
           $(BUILD_PATH)/socket_client     \
-          $(BUILD_PATH)/hello_world       \
-          $(BUILD_PATH)/sample_sdl
+          $(BUILD_PATH)/hello_world
 
 SAMPLE_SRC_DIR:=samples
 
@@ -85,7 +84,8 @@ $(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
 TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_osapi           \
         $(BUILD_PATH)/test_socket          \
-        $(BUILD_PATH)/test_socket_capture
+        $(BUILD_PATH)/test_socket_capture  \
+        $(BUILD_PATH)/test_demux
 
 TEST_SRC_DIR:= source/tests
 

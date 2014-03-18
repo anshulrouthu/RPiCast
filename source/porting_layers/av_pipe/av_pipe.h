@@ -13,6 +13,7 @@
 #include "video_encoder.h"
 #include "file_io.h"
 #include "socket_io.h"
+#include "demux.h"
 #ifdef ARM_CROSS
 #include "video_tunnel.h"
 #endif

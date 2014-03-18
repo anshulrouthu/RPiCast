@@ -22,12 +22,12 @@ FileSink::FileSink(std::string name, const char* filename) :
     ADevice(name),
     m_filename(filename)
 {
+    DBG_MSG("Enter");
 }
 
 FileSink::~FileSink()
 {
-    fclose(m_file);
-    delete m_input;
+    DBG_MSG("Enter");
 }
 
 /**
@@ -35,9 +35,20 @@ FileSink::~FileSink()
  */
 VC_STATUS FileSink::Initialize()
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Enter");
     m_input = new InputPort("FileSink Input", this);
     m_file = fopen(m_filename, "wb");
+    return (VC_SUCCESS);
+}
+
+/**
+ * Initialize the file capture device
+ */
+VC_STATUS FileSink::Uninitialize()
+{
+    DBG_MSG("Enter");
+    fclose(m_file);
+    delete m_input;
     return (VC_SUCCESS);
 }
 
@@ -136,15 +147,17 @@ FileSrc::FileSrc(std::string name, const char* in_file) :
     ADevice(name),
     m_filename(in_file)
 {
+    DBG_MSG("Enter");
 }
 
 FileSrc::~FileSrc()
 {
+    DBG_MSG("Enter");
 }
 
 VC_STATUS FileSrc::Initialize()
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Enter");
     m_output = new OutputPort("FileSrc Output", this);
     m_file = fopen(m_filename, "rb");
     DBG_CHECK(!m_file, return (VC_FAILURE), "Error opening file %s", m_filename);
@@ -153,6 +166,7 @@ VC_STATUS FileSrc::Initialize()
 
 VC_STATUS FileSrc::Uninitialize()
 {
+    DBG_MSG("Enter");
     fclose(m_file);
     delete m_output;
     return (VC_SUCCESS);

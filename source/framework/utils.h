@@ -43,6 +43,10 @@ extern "C"
 #endif
 }
 
+#ifndef MIN
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
 #ifndef NULL
 #define NULL   ((void *) 0)
 #endif
@@ -139,7 +143,8 @@ typedef enum
     VC_FILESRC_DEVICE,
     VC_SOCKET_RECEIVER,
     VC_SOCKET_TRANSMITTER,
-    VC_VIDEO_TUNNEL
+    VC_VIDEO_TUNNEL,
+    VC_DEMUX_DEVICE
 
 } VC_DEVICETYPE;
 

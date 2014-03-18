@@ -86,6 +86,8 @@ protected:
 private:
     std::string m_name;
     InputPort* m_receiver;
+    Mutex m_mutex;
+    ConditionVariable m_cv;
 };
 
 /**
@@ -230,7 +232,6 @@ public:
         m_cv(m_mutex),
         m_pipe(pipe)
     {
-        DBG_MSG("Enter");
     }
 
     /**
@@ -238,7 +239,6 @@ public:
      */
     virtual ~ADevice()
     {
-        DBG_MSG("Enter");
     }
 
     /**
@@ -246,7 +246,6 @@ public:
      */
     virtual VC_STATUS Initialize()
     {
-        DBG_MSG("Initializing %s device", c_str());
         return (VC_NOT_IMPLEMENTED);
     }
 
@@ -255,7 +254,6 @@ public:
      */
     virtual VC_STATUS Uninitialize()
     {
-        DBG_MSG("Uninitializing %s device", c_str());
         return (VC_NOT_IMPLEMENTED);
     }
 
