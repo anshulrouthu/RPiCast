@@ -78,7 +78,6 @@ private:
     int m_handle;
     int m_client_handle;
     struct sockaddr_in m_server_addr;
-    struct sockaddr_in m_client_addr;
 };
 
 class SocketOutput: public OutputPort

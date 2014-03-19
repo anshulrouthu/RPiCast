@@ -46,6 +46,11 @@ VC_STATUS FileSink::Initialize()
  */
 VC_STATUS FileSink::Uninitialize()
 {
+    {
+        AutoMutex automutex(&m_mutex);
+        m_cv.Notify();
+    }
+
     DBG_MSG("Enter");
     fclose(m_file);
     delete m_input;
@@ -169,6 +174,7 @@ VC_STATUS FileSrc::Uninitialize()
     DBG_MSG("Enter");
     fclose(m_file);
     delete m_output;
+    Join();
     return (VC_SUCCESS);
 }
 
@@ -193,7 +199,7 @@ VC_STATUS FileSrc::SendCommand(VC_CMD cmd)
 
 void FileSrc::Task()
 {
-    DBG_TRACE("Enter");
+    DBG_MSG("Enter");
 
     Buffer* buf = m_output->GetBuffer();
     buf->SetTag(TAG_START);
@@ -218,7 +224,7 @@ void FileSrc::Task()
             m_output->PushBuffer(buf);
             break;
         }
-        //m_cv.Wait(10);
+        m_cv.Wait(5);
     }
 
 }

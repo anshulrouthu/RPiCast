@@ -150,12 +150,19 @@ typedef enum
 
 typedef enum
 {
-    VC_FAILURE = 0, VC_SUCCESS, VC_NOT_IMPLEMENTED, VC_UNDEFINED
+    VC_FAILURE = 0,
+    VC_SUCCESS,
+    VC_NOT_IMPLEMENTED,
+    VC_UNDEFINED
 } VC_STATUS;
 
 typedef enum
 {
-    TAG_NONE = 0, TAG_START, TAG_BREAK, TAG_END, TAG_EOF
+    TAG_NONE = 0,
+    TAG_START,
+    TAG_BREAK,
+    TAG_END,
+    TAG_EOS
 } BUF_TAG;
 
 #endif /* UTILS_H_ */

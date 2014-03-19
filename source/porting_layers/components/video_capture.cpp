@@ -24,6 +24,8 @@
 
 #define MAX_DEFAULT_HEIGHT 1080
 #define MAX_DEFAULT_WIDTH 1920
+#define SCALED_HEIGHT 720
+#define SCALED_WIDTH 1280
 
 /**
  * Capturedevice constructor. Initializes the threashold level of input audio level
@@ -213,15 +215,15 @@ void VideoCapture::Task()
     //yuv_frame = avcodec_alloc_frame();
 
     // Determine required buffer size and allocate buffer
-    int numBytes = avpicture_get_size(AV_PIX_FMT_YUV420P, MAX_DEFAULT_WIDTH, MAX_DEFAULT_HEIGHT);
+    int numBytes = avpicture_get_size(AV_PIX_FMT_YUV420P, SCALED_WIDTH, SCALED_HEIGHT);
     uint8_t *buffer = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
 
     // Assign appropriate parts of buffer to image planes in pFrameRGB
     // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
     // of AVPicture
 
-    swsCtx = sws_getContext(MAX_DEFAULT_WIDTH, MAX_DEFAULT_HEIGHT, m_decodeCtx->pix_fmt, MAX_DEFAULT_WIDTH,
-        MAX_DEFAULT_HEIGHT, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+    swsCtx = sws_getContext(MAX_DEFAULT_WIDTH, MAX_DEFAULT_HEIGHT, m_decodeCtx->pix_fmt, SCALED_WIDTH, SCALED_HEIGHT,
+        AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
     while (m_state)
     {
@@ -239,10 +241,11 @@ void VideoCapture::Task()
                     Buffer* buf = m_output->GetBuffer();
                     yuv_frame = static_cast<AVFrame*>(buf->GetData());
 
-                    avpicture_fill((AVPicture *) yuv_frame, buffer, AV_PIX_FMT_YUV420P, MAX_DEFAULT_WIDTH, MAX_DEFAULT_HEIGHT);
+                    avpicture_fill((AVPicture *) yuv_frame, buffer, AV_PIX_FMT_YUV420P, SCALED_WIDTH, SCALED_HEIGHT);
                     /* convert frame in to yuv */
-                    sws_scale(swsCtx, (const uint8_t * const *) bgr_frame->data, bgr_frame->linesize, 0, MAX_DEFAULT_HEIGHT, yuv_frame->data, yuv_frame->linesize);
-                    yuv_frame->pts = pts;// = AV_NOPTS_VALUE;
+                    sws_scale(swsCtx, (const uint8_t * const *) bgr_frame->data, bgr_frame->linesize, 0,
+                        MAX_DEFAULT_HEIGHT, yuv_frame->data, yuv_frame->linesize);
+                    yuv_frame->pts = AV_NOPTS_VALUE;
                     m_output->PushBuffer(buf);
                 }
                 av_free_packet(&packet);

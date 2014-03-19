@@ -40,14 +40,14 @@ VC_STATUS VideoEncoder::Initialize()
     /* put sample parameters */
     m_encodeCtx->bit_rate = 400000;
     m_encodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-    m_encodeCtx->width = 1920;
-    m_encodeCtx->height = 1080;
+    m_encodeCtx->width = 1280;
+    m_encodeCtx->height = 720;
     m_encodeCtx->time_base = (AVRational ) { 1, 60 };
     m_encodeCtx->gop_size = 45;
     m_encodeCtx->max_b_frames = 1;
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
-    m_encodeCtx->qmin = 3;
-    m_encodeCtx->qmax = 6;
+    m_encodeCtx->qmin = 5;
+    m_encodeCtx->qmax = 10;
 
     DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s",
         codec->long_name);
@@ -157,7 +157,7 @@ void VideoEncoder::Task()
         else
         {
             AutoMutex automutex(&m_mutex);
-            while(!m_input->IsBufferAvailable() && m_state)
+            while (!m_input->IsBufferAvailable() && m_state)
             {
                 m_cv.Wait();
             }

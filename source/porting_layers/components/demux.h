@@ -31,7 +31,7 @@ extern "C"
 
 class CustomIOPort;
 
-class DemuxDevice :public ADevice, public WorkerThread
+class DemuxDevice: public ADevice, public WorkerThread
 {
 public:
     DemuxDevice(std::string name, BasePipe* pipe);
@@ -44,20 +44,23 @@ public:
     virtual OutputPort* Output(int portno = 0);
     virtual VC_STATUS SendCommand(VC_CMD cmd);
 
-
 private:
     virtual void Task();
     CustomIOPort* m_input;
-    std::map<int,OutputPort*> m_output;
+    std::map<int, OutputPort*> m_output;
     AVFormatContext* m_ctx;
+    AVBitStreamFilterContext* m_h264filter_ctx;
+    bool m_preroll;
 };
 
 class CustomIOPort: public InputPort
 {
     friend class DemuxDevice;
 public:
-    CustomIOPort(AVFormatContext* const ctx,std::string name, ADevice* device);
+    CustomIOPort(std::string name, ADevice* device);
     virtual ~CustomIOPort();
+    VC_STATUS OpenInput(AVFormatContext* const ctx);
+    VC_STATUS CloseInput();
 
 private:
     int read(uint8_t *buf, int buf_size);

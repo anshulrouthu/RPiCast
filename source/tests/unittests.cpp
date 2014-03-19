@@ -271,7 +271,16 @@ TEST(SocketIOTest)
 
     delete output1;
 
-    OutputPort* output2 = new SocketOutput("Socket Output1", NULL,  "127.0.0.1", 9000);
+    while (!input->IsBufferAvailable())
+        ;
+
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK(!memcmp(buf->GetData(), "Disconnect", buf->GetSize()));
+    input->RecycleBuffer(buf);
+    buf = NULL;
+
+    OutputPort* output2 = new SocketOutput("Socket Output2", NULL,  "127.0.0.1", 9000);
     buf = output2->GetBuffer();
     CHECK(!!buf);
     buf->WriteData((void*) "RPiCast Test2", 13);
@@ -282,7 +291,7 @@ TEST(SocketIOTest)
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
-    CHECK(!memcmp(buf->GetData(), "RPiCast Test2", 13));
+    CHECK(!memcmp(buf->GetData(), "RPiCast Test2", buf->GetSize()));
     input->RecycleBuffer(buf);
     buf = NULL;
 
@@ -327,15 +336,14 @@ TEST(SocketIODeviceTest)
     client->SendCommand(VC_CMD_STOP);
     server->SendCommand(VC_CMD_STOP);
 
-
     pipe->DisconnectPorts(client->Input(),output);
     pipe->DisconnectPorts(input, server->Output());
 
     server->Uninitialize();
     client->Uninitialize();
 
-    delete server;
     delete client;
+    delete server;
     delete input;
     delete output;
 }

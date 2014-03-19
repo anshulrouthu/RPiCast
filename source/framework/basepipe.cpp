@@ -112,7 +112,13 @@ InputPort::~InputPort()
         delete *it;
     }
 
+    for (std::list<Buffer*>::iterator it = m_processbuf.begin(); it != m_processbuf.end(); it++)
+    {
+        delete *it;
+    }
+
     m_buffers.clear();
+    m_processbuf.clear();
 }
 /**
  * Returns the filled buffer from the received buffer queue
@@ -136,7 +142,6 @@ Buffer* InputPort::GetFilledBuffer()
  */
 Buffer* InputPort::GetEmptyBuffer()
 {
-    DBG_TRACE("Enter");
     AutoMutex automutex(&m_queue_mutex);
     while (m_buffers.size() == 0)
     {

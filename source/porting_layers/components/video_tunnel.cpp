@@ -239,9 +239,25 @@ void VideoTunnel::Task()
                 ilclient_change_component_state(m_video_render, OMX_StateExecuting);
             }
 
-            if(!s)
+            if(b->GetTag() == TAG_EOS)
             {
-                break;
+                DBG_MSG("Receiver EOS Tag");
+                OMXBuffer* buf = dynamic_cast<OMXBuffer*>(AllocateBuffer());
+                buf->m_omxbuf->nFilledLen = 0;
+                buf->m_omxbuf->nFlags = OMX_BUFFERFLAG_TIME_UNKNOWN | OMX_BUFFERFLAG_EOS;
+
+                err = OMX_EmptyThisBuffer(ILC_GET_HANDLE(m_video_decode), buf->m_omxbuf);
+                DBG_CHECK(err != OMX_ErrorNone, break, "Error: Unable to empty buffer");
+
+                // wait for EOS from render
+                ilclient_wait_for_event(m_video_render, OMX_EventBufferFlag, 90, 0, OMX_BUFFERFLAG_EOS, 0, ILCLIENT_BUFFER_FLAG_EOS, 100);
+
+                // need to flush the renderer to allow video_decode to disable its input port
+                ilclient_flush_tunnels(m_tunnel, 0);
+
+                delete buf;
+                delete b;
+                continue;
             }
 
             if (first_packet)
@@ -326,4 +342,11 @@ VC_STATUS OMXBuffer::SetSize(size_t size)
 void* OMXBuffer::GetData()
 {
     return (m_omxbuf->pBuffer);
+}
+
+VC_STATUS OMXBuffer::WriteData(void* data, size_t size)
+{
+    DBG_CHECK(!memcpy(m_omxbuf->pBuffer, data, size), return (VC_FAILURE), "Error writing data to buffer");
+    m_omxbuf->nFilledLen += size;
+    return (VC_SUCCESS);
 }

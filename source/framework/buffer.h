@@ -38,17 +38,16 @@ public:
     virtual VC_STATUS WriteData(void* buf, size_t size);
     virtual BUF_TAG GetTag();
     virtual VC_STATUS SetTag(BUF_TAG tag);
-
+    virtual const char* c_str()
+    {
+        return ("Buffer");
+    }
 protected:
     void* m_data;
     size_t m_size;
     BUF_TAG m_tag;
 
 private:
-    const char* c_str()
-    {
-        return ("Buffer");
-    }
     int m_samples;
 
 };

@@ -94,10 +94,10 @@ VC_STATUS SocketOutDevice::SendCommand(VC_CMD cmd)
     case VC_CMD_START:
         m_socket_output = new SocketOutput(m_name + "_Input", this, m_server_addr);
         DBG_CHECK(!m_socket_output, return (VC_FAILURE), "Error: Creating socket out device");
-        m_device_ready = true;
         break;
     case VC_CMD_STOP:
         delete m_socket_output;
+        m_socket_output = NULL;
         break;
     }
     return (VC_SUCCESS);
@@ -107,7 +107,7 @@ VC_STATUS SocketOutDevice::Notify(VC_EVENT* evt)
 {
     AutoMutex automutex(&m_mutex);
 
-    while (Input()->IsBufferAvailable() && m_device_ready)
+    while (Input()->IsBufferAvailable() && m_socket_output)
     {
         Buffer* buf = Input()->GetFilledBuffer();
         m_socket_output->PushBuffer(buf);
@@ -152,9 +152,10 @@ void SocketInput::Task()
     while (m_state)
     {
         bool connected = true;
+        struct sockaddr_in client_addr;
         socklen_t client_len;
-        client_len = sizeof(m_client_addr);
-        m_client_handle = accept(m_handle, (struct sockaddr *) &m_client_addr, &client_len);
+        client_len = sizeof(client_addr);
+        m_client_handle = accept(m_handle, (struct sockaddr *) &client_addr, &client_len);
         DBG_CHECK(m_client_handle < 0, connected = false, "Error(%d): On connection accept",m_client_handle);
 
         if (connected)
@@ -173,8 +174,10 @@ void SocketInput::Task()
             if (!memcmp(buf->GetData(), "Disconnect", buf->GetSize()))
             {
                 DBG_MSG("Client Disconnected");
+                buf->SetTag(TAG_EOS);
+                ReceiveBuffer(buf);
                 connected = false;
-                RecycleBuffer(buf);
+                shutdown(m_client_handle,SHUT_RDWR);
                 break;
             }
 
