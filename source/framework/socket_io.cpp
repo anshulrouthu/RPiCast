@@ -118,11 +118,10 @@ VC_STATUS SocketOutDevice::Notify(VC_EVENT* evt)
 
 SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, int port) :
     InputPort(name, device),
-    m_handle(0),
-    m_client_handle(0)
+    m_handle(0)
 {
     DBG_MSG("Enter");
-    m_handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    m_handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     DBG_CHECK(m_handle < 0, return, "Error: Creating socket");
 
     bzero((char *) &m_server_addr, sizeof(m_server_addr));
@@ -132,7 +131,6 @@ SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, in
 
     int err = bind(m_handle, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
     DBG_CHECK(err < 0, return, "Error(%d): Unable to bind socket", err);
-    listen(m_handle, 1);
 
     Start();
 }
@@ -141,48 +139,33 @@ SocketInput::~SocketInput()
 {
     Stop();
     shutdown(m_handle,SHUT_RDWR);
-    shutdown(m_client_handle,SHUT_RDWR);
-    Join();
     close(m_handle);
-    close(m_client_handle);
+    Join();
 }
 
 void SocketInput::Task()
 {
     while (m_state)
     {
-        bool connected = true;
         struct sockaddr_in client_addr;
         socklen_t client_len;
         client_len = sizeof(client_addr);
-        m_client_handle = accept(m_handle, (struct sockaddr *) &client_addr, &client_len);
-        DBG_CHECK(m_client_handle < 0, connected = false, "Error(%d): On connection accept",m_client_handle);
 
-        if (connected)
+        Buffer* buf = GetEmptyBuffer();
+        bzero(buf->GetData(), buf->GetMaxSize());
+
+        size_t bytes_read = recvfrom(m_handle, buf->GetData(), buf->GetMaxSize(), 0, (struct sockaddr *) &client_addr, &client_len);
+        buf->SetSize(bytes_read);
+
+        if (!memcmp(buf->GetData(), "Disconnect", buf->GetSize()))
         {
-            DBG_MSG("Client Connected");
-        }
-
-        while (connected)
-        {
-            Buffer* buf = GetEmptyBuffer();
-            bzero(buf->GetData(), buf->GetMaxSize());
-
-            size_t bytes_read = read(m_client_handle, buf->GetData(), buf->GetMaxSize());
-            buf->SetSize(bytes_read);
-
-            if (!memcmp(buf->GetData(), "Disconnect", buf->GetSize()))
-            {
-                DBG_MSG("Client Disconnected");
-                buf->SetTag(TAG_EOS);
-                ReceiveBuffer(buf);
-                connected = false;
-                shutdown(m_client_handle,SHUT_RDWR);
-                break;
-            }
-
+            DBG_MSG("Client Disconnected");
+            buf->SetTag(TAG_EOS);
             ReceiveBuffer(buf);
+            continue;
         }
+
+        ReceiveBuffer(buf);
     }
 }
 
@@ -225,37 +208,36 @@ VC_STATUS SocketInput::ReceiveBuffer(Buffer* buf)
 
 SocketOutput::SocketOutput(std::string name, ADevice* device, const char* addr, int port) :
     OutputPort(name, device),
-    m_handle(0),
-    m_server_handle(0),
-    m_connected(false)
+    m_handle(0)
 {
     DBG_MSG("Connecting to:%s", addr);
     int err;
 
-    m_handle = socket(2, SOCK_STREAM, IPPROTO_TCP);
+    m_handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     DBG_CHECK(m_handle < 0, return, "Error: Creating socket");
+
+    memset((char *) &m_client_addr, 0, sizeof(m_client_addr));
+    m_client_addr.sin_family = AF_INET;
+    m_client_addr.sin_addr.s_addr = htonl(INADDR_ANY );
+    m_client_addr.sin_port = htons(0);
+
+    if (bind(m_handle, (struct sockaddr *) &m_client_addr, sizeof(m_client_addr)) < 0)
+    {
+        perror("bind failed");
+    }
 
     m_server_addr.sin_family = AF_INET;
     m_server_addr.sin_port = htons(port);
-    err = inet_pton(2, addr, &m_server_addr.sin_addr);
+    err = inet_aton(addr, &m_server_addr.sin_addr);
+
     DBG_CHECK(err <= 0, return, "Error(%d): Getting server address", err);
-
-    err = connect(m_handle, (struct sockaddr*) &m_server_addr, sizeof(m_server_addr));
-    DBG_CHECK(err < 0, delete this, "Error(%d): Connecting to server", err);
-
-    m_connected = true;
-    DBG_MSG("Connected to Server");
-
 }
 
 SocketOutput::~SocketOutput()
 {
-    size_t bytes = write(m_handle, "Disconnect", 10);
+    size_t bytes = sendto(m_handle, "Disconnect", 10, 0, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
     DBG_CHECK(bytes != 10,, "Error: Unable send disconnect call");
-    m_connected = false;
-    DBG_MSG("Disconnected from Server");
     close(m_handle);
-    close(m_server_handle);
 }
 
 Buffer* SocketOutput::GetBuffer()
@@ -265,12 +247,15 @@ Buffer* SocketOutput::GetBuffer()
 
 VC_STATUS SocketOutput::PushBuffer(Buffer* buf)
 {
-    size_t bytes = write(m_handle, buf->GetData(), buf->GetSize());
-    DBG_CHECK(bytes != buf->GetSize(), return (VC_FAILURE), "Error: Data sent incomplete");
-    return (VC_SUCCESS);
-}
+    int read_size = 0;
+    int offset = 0;
 
-bool SocketOutput::IsConnected()
-{
-    return (m_connected);
+    while (offset < buf->GetSize())
+    {
+        read_size = MIN(buf->GetSize() - offset, UDP_PACKET_MAXSIZE);
+        size_t bytes = sendto(m_handle, buf->GetData() + offset, read_size, 0, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
+        DBG_CHECK(bytes != read_size, return (VC_FAILURE), "Error(%d): Data sent incomplete %d", bytes, read_size);
+        offset += read_size;
+    }
+    return (VC_SUCCESS);
 }

@@ -46,12 +46,15 @@ VC_STATUS FileSink::Initialize()
  */
 VC_STATUS FileSink::Uninitialize()
 {
+    DBG_MSG("Enter");
+
     {
         AutoMutex automutex(&m_mutex);
         m_cv.Notify();
     }
 
-    DBG_MSG("Enter");
+    Join();
+
     fclose(m_file);
     delete m_input;
     return (VC_SUCCESS);

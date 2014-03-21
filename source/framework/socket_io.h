@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 
 #define SOCKET_PORT 88888
+#define UDP_PACKET_MAXSIZE ((64 * 1024) - 29)
 
 class SocketInput;
 class SocketOutput;
@@ -76,7 +77,6 @@ private:
     virtual void Task();
 
     int m_handle;
-    int m_client_handle;
     struct sockaddr_in m_server_addr;
 };
 
@@ -89,13 +89,9 @@ public:
     virtual Buffer* GetBuffer();
 
 private:
-    bool IsConnected();
-
     int m_handle;
-    int m_server_handle;
     struct sockaddr_in m_server_addr;
     struct sockaddr_in m_client_addr;
-    bool m_connected;
 };
 
 #endif /* SOCKET_H_ */
