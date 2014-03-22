@@ -69,7 +69,8 @@ $(TARGET_SERVER): source/main/rpicast-server.o $(TARGET_LIB)
 SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/socket_server     \
           $(BUILD_PATH)/socket_client     \
-          $(BUILD_PATH)/hello_world
+          $(BUILD_PATH)/hello_world       \
+          $(BUILD_PATH)/muxing
 
 SAMPLE_SRC_DIR:=samples
 

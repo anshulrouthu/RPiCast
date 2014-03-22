@@ -73,8 +73,6 @@ private:
     AVFormatContext* m_fmtCtx;
     AVCodecContext* m_decodeCtx;
 
-    bool m_running;
-    Timer* m_timer;
     InputPort* m_input;
     OutputPort* m_output;
 

@@ -45,7 +45,7 @@ ADevice* BasePipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char
  */
 VC_STATUS BasePipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
-    DBG_MSG("Connecting devices %s, %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
+    DBG_MSG("Connecting devices %s ----> %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
     return (ConnectPorts(dst->Input(dst_portno), src->Output(src_portno)));
 }
@@ -57,7 +57,7 @@ VC_STATUS BasePipe::ConnectDevices(ADevice* src, ADevice* dst, int src_portno, i
  */
 VC_STATUS BasePipe::DisconnectDevices(ADevice* src, ADevice* dst, int src_portno, int dst_portno)
 {
-    DBG_MSG("Disconnecting devices %s, %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
+    DBG_MSG("Disconnecting devices %s --X--> %s", src ? src->c_str() : "NULL", dst ? dst->c_str() : "NULL");
     DBG_CHECK(!src || !dst, return (VC_FAILURE), "Error: Null parameters");
     return (DisconnectPorts(dst->Input(dst_portno), src->Output(src_portno)));
 }
@@ -221,6 +221,13 @@ OutputPort::OutputPort(std::string name, ADevice* device) :
     DBG_MSG("Enter");
 }
 
+OutputPort::~OutputPort()
+{
+    {
+        AutoMutex automutex(&m_mutex);
+        m_cv.Notify();
+    }
+}
 /**
  * Sets the receiver of the output port
  * @param inport the input port to connect to
@@ -264,7 +271,7 @@ Buffer* OutputPort::GetBuffer()
     if (!m_receiver)
     {
         AutoMutex automutex(&m_mutex);
-        while(!m_receiver)
+        if (!m_receiver)
         {
             DBG_ERR("Waiting for receiver");
             m_cv.Wait();

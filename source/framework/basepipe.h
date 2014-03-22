@@ -68,9 +68,7 @@ class OutputPort
     friend class BasePipe;
 public:
     OutputPort(std::string name, ADevice* device);
-    virtual ~OutputPort()
-    {
-    }
+    virtual ~OutputPort();
     virtual VC_STATUS PushBuffer(Buffer* buf);
     virtual Buffer* GetBuffer();
     virtual VC_STATUS SetReceiver(InputPort* inport);

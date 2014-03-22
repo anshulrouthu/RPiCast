@@ -206,7 +206,7 @@ CustomIOPort::~CustomIOPort()
 VC_STATUS CustomIOPort::OpenInput(AVFormatContext* ctx)
 {
     AutoMutex automutex(&m_wait_mutex);
-    const int buffer_size = 1024 * 1024;
+    const int buffer_size = 32 * 1024;
     ctx->flags |= AVFMT_FLAG_CUSTOM_IO;
     ctx->pb = avio_alloc_context((unsigned char*) av_malloc(buffer_size), buffer_size, 0, this, read_cb, NULL, seek_cb);
     ctx->pb->seekable = false;

@@ -112,7 +112,7 @@ do                                      \
 {                                       \
     if (condition)                      \
     {                                   \
-        DBG_ERR(msg,##args);             \
+        DBG_ERR("("#condition") "msg,##args);             \
         fail;                           \
     }                                   \
 } while (0)

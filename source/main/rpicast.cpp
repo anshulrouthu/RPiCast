@@ -96,14 +96,14 @@ int main(int argc, char* argv[])
     src->SendCommand(VC_CMD_STOP);
     sink->SendCommand(VC_CMD_STOP);
 
-
-    pipe->DisconnectDevices(src,sink);
     if(screen_cast)
     {
         pipe->DisconnectDevices(capture,src);
         capture->Uninitialize();
         delete capture;
     }
+
+    pipe->DisconnectDevices(src,sink);
 
     src->Uninitialize();
     sink->Uninitialize();

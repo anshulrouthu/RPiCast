@@ -28,6 +28,8 @@ extern "C"
 #include "utils.h"
 #include "worker.h"
 
+class OutputCustomIO;
+
 class VideoEncoder: public ADevice, public WorkerThread
 {
 public:
@@ -46,12 +48,28 @@ public:
 private:
     virtual void Task();
 
-    AVFormatContext* m_outCtx;
+    AVFormatContext* m_fmtCtx;
     AVCodecContext* m_encodeCtx;
     InputPort* m_input;
-    OutputPort* m_output;
+    //OutputPort* m_output;
+    OutputCustomIO* m_output;
+    AVStream* m_vidstream;
 
 };
 
+class OutputCustomIO : public OutputPort
+{
+public:
+    OutputCustomIO(std::string name, ADevice* device);
+    virtual ~OutputCustomIO();
+
+    VC_STATUS OpenOutput(AVFormatContext* ctx);
+    VC_STATUS CloseOutput();
+
+private:
+    int Write(uint8_t *pBuffer, int pBufferSize);
+    static int write_cb(void *opaque, uint8_t *pBuffer, int pBufferSize);
+    AVFormatContext* m_ctx;
+};
 
 #endif /* VIDEO_ENCODER_H_ */
