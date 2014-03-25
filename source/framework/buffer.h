@@ -42,6 +42,7 @@ public:
     {
         return ("Buffer");
     }
+    int64_t m_pts;
 protected:
     void* m_data;
     size_t m_size;

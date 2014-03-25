@@ -75,8 +75,9 @@ public:
     virtual void* GetData();
     virtual VC_STATUS WriteData(void* buf, size_t size);
     virtual VC_STATUS SetSize(size_t size);
-private:
     OMX_BUFFERHEADERTYPE* m_omxbuf;
+private:
+
 };
 
 #endif /* VIDEO_TUNNEL_H_ */

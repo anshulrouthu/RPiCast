@@ -25,7 +25,9 @@ VC_STATUS VideoEncoder::Initialize()
     m_input = new InputPort("VidEncoder_Input", this);
     m_output = new OutputCustomIO("VidEncoder_Output", this);
 
-    codec = avcodec_find_encoder(AV_CODEC_ID_MPEG2VIDEO);
+    m_h264filter_ctx = av_bitstream_filter_init("h264_mp4toannexb");
+
+    codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     DBG_CHECK(!codec, return (VC_FAILURE), "Error: Encoder codec not found");
 
     m_fmtCtx = avformat_alloc_context();
@@ -35,22 +37,47 @@ VC_STATUS VideoEncoder::Initialize()
     m_encodeCtx = m_vidstream->codec;
     DBG_CHECK(!m_encodeCtx, return (VC_FAILURE), "Error: Unable to allocate encoder codec context");
 
-    m_encodeCtx->bit_rate = 400000;
+    av_opt_set(m_encodeCtx->priv_data, "preset", "ultrafast", 0);
+    av_opt_set(m_encodeCtx->priv_data, "tune", "zerolatency", 0);
+    av_opt_set(m_encodeCtx->priv_data, "profile", "baseline", 0);
+    av_opt_set(m_encodeCtx->priv_data, "x264opts", "no-mbtree:sliced-threads:sync-lookahead=0", 0);
+
     m_encodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
     m_encodeCtx->width = 1280;
     m_encodeCtx->height = 720;
     m_encodeCtx->time_base = (AVRational ) { 1, 30 };
-    m_encodeCtx->gop_size = 45;
-    m_encodeCtx->max_b_frames = 1;
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
-    m_encodeCtx->qmin = 8;
-    m_encodeCtx->qmax = 12;
+    m_encodeCtx->bit_rate = 1000 * 1000;
+    //m_encodeCtx->rc_max_rate = 300 * 1024;
+    //m_encodeCtx->rc_buffer_size = 300 * 1024;
+    m_encodeCtx->gop_size = 45;
+    m_encodeCtx->max_b_frames = 2;
+    m_encodeCtx->keyint_min = 45;
+    m_encodeCtx->b_frame_strategy = 1;
+    m_encodeCtx->coder_type = 1;
+    m_encodeCtx->qmin = 15;
+    m_encodeCtx->qmax = 25;
+    m_encodeCtx->scenechange_threshold = 40;
+    m_encodeCtx->flags |= CODEC_FLAG_LOOP_FILTER;
+    m_encodeCtx->me_method = ME_HEX;
+    m_encodeCtx->me_subpel_quality = 7;
+    m_encodeCtx->me_cmp = 1;
+    m_encodeCtx->me_range = 16;
+    m_encodeCtx->i_quant_factor = 0.71;
+    m_encodeCtx->qcompress = 0.6;
+    m_encodeCtx->max_qdiff = 4;
+    m_encodeCtx->thread_count = 2;
+    //m_encodeCtx->profile = FF_PROFILE_H264_HIGH;
+
+    m_fmtCtx->oformat->flags |= AVFMT_TS_NONSTRICT;
+
     if (m_fmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
     {
         m_encodeCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
     }
 
     DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s", codec->long_name);
+
 
     av_dump_format(m_fmtCtx, 0, NULL, 1);
     m_output->OpenOutput(m_fmtCtx);
@@ -123,39 +150,62 @@ void VideoEncoder::Task()
 
     int got_output;
     int err;
-    AVPacket pkt;
 
-    av_init_packet(&pkt);
-    pkt.data = NULL;
-    pkt.size = 0;
+    int frames = 0;
 
     while (m_state)
     {
         if (m_input->IsBufferAvailable())
         {
+            AVPacket pkt;
+            av_init_packet(&pkt);
+            pkt.data = NULL;
+            pkt.size = 0;
+            av_init_packet(&pkt);
             Buffer* inbuf = m_input->GetFilledBuffer();
             AVFrame* frame = static_cast<AVFrame*>(inbuf->GetData());
+            frame->pts = frames;
 
             err = avcodec_encode_video2(m_encodeCtx, &pkt, frame, &got_output);
             DBG_CHECK(err < 0, return, "Error(%d): Encoding frame", err);
 
-            for (int i = 0, got_output = 1; got_output; i++)
+            if (got_output)
             {
-                err = avcodec_encode_video2(m_encodeCtx, &pkt, 0, &got_output);
-                DBG_CHECK(err < 0, return, "Error(%d): Encoding delayed frame", err);
-
-                if (got_output)
+                pkt.stream_index = m_vidstream->index;
+                if(pkt.pts != AV_NOPTS_VALUE)
                 {
-                    if (m_encodeCtx->coded_frame->key_frame)
-                    {
-                        pkt.flags |= AV_PKT_FLAG_KEY;
-                    }
-
-                    pkt.pts = av_rescale_q(m_encodeCtx->coded_frame->pts, m_encodeCtx->time_base, m_vidstream->time_base);
-                    pkt.stream_index = m_vidstream->index;
-                    av_interleaved_write_frame(m_fmtCtx, &pkt);
-                    av_free_packet(&pkt);
+                    pkt.pts = av_rescale_q(pkt.pts, m_encodeCtx->time_base, m_vidstream->time_base);
                 }
+                if(pkt.dts != AV_NOPTS_VALUE)
+                {
+                    pkt.dts = av_rescale_q(pkt.dts, m_encodeCtx->time_base, m_vidstream->time_base);
+                }
+
+                if (m_encodeCtx->coded_frame->key_frame)
+                {
+                    pkt.flags |= AV_PKT_FLAG_KEY;
+                }
+
+                if (m_encodeCtx->codec->id == AV_CODEC_ID_H264)
+                {
+                    AVPacket new_pkt = pkt;
+                    int result = av_bitstream_filter_filter(m_h264filter_ctx, m_fmtCtx->streams[pkt.stream_index]->codec, NULL,
+                        &new_pkt.data, &new_pkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
+
+                    /* if bitstream filter failed, just print a warning because it may be OK for
+                     * some cases, such as BD AVC video */
+                    if (result < 0)
+                    {
+                        DBG_ERR("H264 bitstream filter failed.%d", result);
+                    }
+                    else
+                    {
+                        pkt = new_pkt;
+                    }
+                }
+
+                av_interleaved_write_frame(m_fmtCtx, &pkt);
+                frames++;
             }
 
             m_input->RecycleBuffer(inbuf);
@@ -169,6 +219,8 @@ void VideoEncoder::Task()
             }
         }
     }
+
+    av_write_trailer(m_fmtCtx);
 }
 
 OutputCustomIO::OutputCustomIO(std::string name, ADevice* device):
@@ -183,7 +235,7 @@ OutputCustomIO::~OutputCustomIO()
 
 VC_STATUS OutputCustomIO::OpenOutput(AVFormatContext* ctx)
 {
-    const int buffer_size = 1024 * 1024;
+    const int buffer_size = 32 * 1024;
     ctx->flags |= AVFMT_FLAG_CUSTOM_IO;
     ctx->pb = avio_alloc_context((unsigned char*) av_malloc(buffer_size), buffer_size, 0, this, NULL, write_cb, NULL);
     m_ctx = ctx;

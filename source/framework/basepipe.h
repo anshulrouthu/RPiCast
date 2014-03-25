@@ -80,12 +80,12 @@ public:
 
 protected:
     ADevice* m_device;
+    Mutex m_mutex;
+    ConditionVariable m_cv;
 
 private:
     std::string m_name;
     InputPort* m_receiver;
-    Mutex m_mutex;
-    ConditionVariable m_cv;
 };
 
 /**

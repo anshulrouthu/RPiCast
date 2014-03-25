@@ -15,7 +15,7 @@
 /**
  * Number of input buffers
  */
-#define NUM_OF_BUFFERS 32
+#define NUM_OF_BUFFERS 64
 
 /**
  * APipe constructor

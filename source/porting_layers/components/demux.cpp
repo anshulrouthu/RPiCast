@@ -117,7 +117,7 @@ void DemuxDevice::Task()
                 m_input->OpenInput(m_ctx);
 
                 avformat_open_input(&m_ctx, "", NULL, NULL);
-                m_ctx->max_analyze_duration = AV_TIME_BASE / 5; /* analyze 1/5 of a second of data */
+                m_ctx->max_analyze_duration = AV_TIME_BASE / 10; /* analyze 1/5 of a second of data */
                 avformat_find_stream_info(m_ctx, NULL);
                 m_preroll = false;
             }
@@ -125,7 +125,6 @@ void DemuxDevice::Task()
             pkt.data = NULL;
             pkt.size = 0;
             err = av_read_frame(m_ctx, &pkt);
-
             if (err == (int) AVERROR_EOF && m_state)
             {
                 DBG_MSG("Received EOS Tag");
@@ -138,10 +137,10 @@ void DemuxDevice::Task()
                 continue;
 
             }
-            if (m_ctx->streams[pkt.stream_index]->codec->codec_id == AV_CODEC_ID_H264)
+            if (m_ctx->streams[pkt.stream_index]->codec->codec_id == AV_CODEC_ID_H264 && 0)
             {
-                AVPacket new_pkt;
-                av_init_packet(&new_pkt);
+                AVPacket new_pkt = pkt;
+                //av_init_packet(&new_pkt);
                 int result = av_bitstream_filter_filter(m_h264filter_ctx, m_ctx->streams[pkt.stream_index]->codec, NULL,
                     &new_pkt.data, &new_pkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
 
@@ -156,7 +155,7 @@ void DemuxDevice::Task()
                     pkt = new_pkt;
                 }
 
-                av_free_packet(&new_pkt);
+                //av_free_packet(&new_pkt);
             }
 
             if (err == 0 && m_state)
@@ -171,6 +170,7 @@ void DemuxDevice::Task()
                         int write_bytes = MIN((pkt.size - offset),buf->GetMaxSize());
                         buf->WriteData(pkt.data + offset, write_bytes);
                         offset += write_bytes;
+
                         Output(0)->PushBuffer(buf);
                     }
                 }

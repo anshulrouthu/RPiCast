@@ -80,7 +80,6 @@ VC_STATUS VideoCapture::Initialize()
 
     av_dict_set(&options, "video_size", "1920x1080", 0);
     av_dict_set(&options, "pix_fmt", "yuv420p", 0);
-    av_dict_set(&options, "qscale:v", "1", 0);
 
     avfmt = av_find_input_format("x11grab");
 
@@ -191,7 +190,7 @@ void VideoCapture::Task()
     AVFrame* yuv_frame;
     struct SwsContext * swsCtx;
     int frameFinished;
-    int pts;
+    int64_t pts;
 
     bgr_frame = avcodec_alloc_frame();
 
@@ -218,7 +217,7 @@ void VideoCapture::Task()
                     avpicture_fill((AVPicture *) yuv_frame, buffer, AV_PIX_FMT_YUV420P, SCALED_WIDTH, SCALED_HEIGHT);
 
                     sws_scale(swsCtx, (const uint8_t * const *) bgr_frame->data, bgr_frame->linesize, 0, MAX_DEFAULT_HEIGHT, yuv_frame->data, yuv_frame->linesize);
-                    yuv_frame->pts = AV_NOPTS_VALUE;
+                    yuv_frame->pts = pts;
                     m_output->PushBuffer(buf);
                 }
                 av_free_packet(&packet);

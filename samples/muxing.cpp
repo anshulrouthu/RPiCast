@@ -44,11 +44,11 @@ void run()
             printf("Errore avio_alloc_context !!!\n");
         else
         {
-            AVOutputFormat *pAVOutputFormat = av_guess_format(NULL, FileName, NULL); // CODEC_ID_H264 -> mp4, mov; CODEC_ID_THEORA -> ogg; CODEC_ID_MPEG4 -> mpegts, avi; CODEC_ID_VP8 -> webm
+            AVOutputFormat *pAVOutputFormat = av_guess_format("h264", FileName, NULL); // CODEC_ID_H264 -> mp4, mov; CODEC_ID_THEORA -> ogg; CODEC_ID_MPEG4 -> mpegts, avi; CODEC_ID_VP8 -> webm
             if (!pAVOutputFormat)
             {
                 printf("Could not set output format, using MPEG.\n");
-                pAVOutputFormat = av_guess_format("mpeg", NULL, NULL);
+                pAVOutputFormat = av_guess_format("mp4", NULL, NULL);
             }
             if (!pAVOutputFormat)
                 printf("av_guess_format Error!\n");

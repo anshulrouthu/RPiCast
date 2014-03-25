@@ -22,6 +22,7 @@ extern "C"
 #include <libavformat/avio.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+#include <libavutil/opt.h>
 }
 
 #include "basepipe.h"
@@ -54,6 +55,7 @@ private:
     //OutputPort* m_output;
     OutputCustomIO* m_output;
     AVStream* m_vidstream;
+    AVBitStreamFilterContext* m_h264filter_ctx;
 
 };
 

@@ -40,7 +40,8 @@ INC:= $(OMXINC) -Irpi-staging/usr/include/             \
      -Isource/osapi/                                   \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
-     -Isource/porting_layers/av_pipe/
+     -Isource/porting_layers/av_pipe/                  \
+     -I./
 
 
 #list of files containing main() function, to prevent conflicts while linking

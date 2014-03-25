@@ -113,7 +113,7 @@ static int video_decode_test(char *filename)
     format.nSize = sizeof(OMX_VIDEO_PARAM_PORTFORMATTYPE);
     format.nVersion.nVersion = OMX_VERSION;
     format.nPortIndex = 130;
-    format.eCompressionFormat = OMX_VIDEO_CodingMPEG2;
+    format.eCompressionFormat = OMX_VIDEO_CodingAVC;
 
     if (status == 0
         && OMX_SetParameter(ILC_GET_HANDLE(video_decode), OMX_IndexParamVideoPortFormat, &format) == OMX_ErrorNone

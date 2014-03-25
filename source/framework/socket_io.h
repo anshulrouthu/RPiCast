@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 
 #define SOCKET_PORT 88888
-#define UDP_PACKET_MAXSIZE ((60 * 1024))
+#define UDP_PACKET_MAXSIZE ((20 * 1024))
 
 class SocketInput;
 class SocketOutput;
