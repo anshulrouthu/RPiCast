@@ -18,12 +18,165 @@
 #define NUM_OF_BUFFERS 64
 
 /**
- * APipe constructor
+ * Pipe constructor
  * @param name to identify the pipe
  */
 BasePipe::BasePipe(std::string name) :
     m_name(name)
 {
+}
+
+/**
+ * Pipe Destructor
+ */
+BasePipe::~BasePipe()
+{
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        delete (*it);
+        (*it) = NULL;
+    }
+
+    m_devices.clear();
+    m_devmap.clear();
+}
+
+/**
+ * Initialize the pipe
+ */
+VC_STATUS BasePipe::Initialize()
+{
+    VC_STATUS err;
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        err = (*it)->Initialize();
+        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE),"Error: Unable to initialize device %s", (*it)->c_str());
+    }
+    return (VC_SUCCESS);
+}
+
+/**
+ * Uninitialize the pipe
+ */
+VC_STATUS BasePipe::Uninitialize()
+{
+    VC_STATUS err;
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        err = (*it)->Uninitialize();
+        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE),"Error: Unable to uninitialize device %s", (*it)->c_str());
+    }
+    return (VC_SUCCESS);
+}
+
+/**
+ * Add the requested devices to the pipe's device list
+ * @param devtype device type
+ * @param name device name
+ * @param args arguments to device
+ */
+VC_STATUS BasePipe::AddDevice(VC_DEVICETYPE devtype, std::string name, const char* args)
+{
+    ADevice* device = GetDevice(devtype, name, args);
+    m_devices.push_back(device);
+    m_devmap[devtype] = device;
+
+    return (VC_SUCCESS);
+}
+
+/**
+ * Remove the requested device list from pipe
+ * @param dev detice type
+ */
+VC_STATUS BasePipe::RemoveDevice(VC_DEVICETYPE dev)
+{
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        if(m_devmap[dev] == (*it))
+        {
+             delete (*it);
+             (*it) = NULL;
+             m_devices.erase(it);
+             m_devmap.erase(dev);
+             return (VC_SUCCESS);
+        }
+    }
+
+    return (VC_FAILURE);
+}
+
+/**
+ * Send command to all the devices
+ * @param cmd command to send to devices
+ */
+VC_STATUS BasePipe::SendCommand(VC_CMD cmd)
+{
+    VC_STATUS err;
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        err = (*it)->SendCommand(cmd);
+        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to send command to %s", (*it)->c_str());
+    }
+
+    return (VC_SUCCESS);
+}
+
+/**
+ * Connect all the devices in the list
+ */
+VC_STATUS BasePipe::Prepare()
+{
+    VC_STATUS err;
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        if(it != m_devices.begin())
+        {
+            std::list<ADevice*>::iterator prev = it;
+            --prev;
+
+            err = ConnectDevices((*prev), (*it));
+            DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to connect devices %s %s", (*prev)->c_str(), (*it)->c_str());
+        }
+
+    }
+
+    return (VC_SUCCESS);
+}
+
+/**
+ * Disconnect all the devices in the list
+ */
+VC_STATUS BasePipe::Reset()
+{
+    VC_STATUS err;
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        if(it != m_devices.begin())
+        {
+            std::list<ADevice*>::iterator prev = it;
+            --prev;
+
+            err = DisconnectDevices((*prev), (*it));
+            DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to connect devices %s %s", (*prev)->c_str(), (*it)->c_str());
+        }
+    }
+
+    return (VC_SUCCESS);
+}
+/**
+ * Find and return the requested device
+ */
+ADevice* BasePipe::FindDevice(VC_DEVICETYPE dev)
+{
+    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    {
+        if(m_devmap[dev] == (*it))
+        {
+            return (*it);
+        }
+    }
+
+    return (NULL);
 }
 
 /**
@@ -98,6 +251,7 @@ InputPort::InputPort(std::string name, ADevice* device) :
     m_queue_cv(m_queue_mutex)
 {
     DBG_MSG("Enter");
+    AutoMutex automutex(&m_queue_mutex);
     for (int i = 0; i < NUM_OF_BUFFERS; i++)
     {
         Buffer* buf = new Buffer();
@@ -107,6 +261,7 @@ InputPort::InputPort(std::string name, ADevice* device) :
 
 InputPort::~InputPort()
 {
+    AutoMutex automutex(&m_queue_mutex);
     for (std::list<Buffer*>::iterator it = m_buffers.begin(); it != m_buffers.end(); it++)
     {
         delete *it;
@@ -213,10 +368,10 @@ bool InputPort::IsBufferAvailable()
  */
 OutputPort::OutputPort(std::string name, ADevice* device) :
     m_device(device),
-    m_name(name),
-    m_receiver(NULL),
     m_mutex(),
-    m_cv(m_mutex)
+    m_cv(m_mutex),
+    m_name(name),
+    m_receiver(NULL)
 {
     DBG_MSG("Enter");
 }

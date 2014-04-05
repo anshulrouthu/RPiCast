@@ -117,7 +117,7 @@ void DemuxDevice::Task()
                 m_input->OpenInput(m_ctx);
 
                 avformat_open_input(&m_ctx, "", NULL, NULL);
-                m_ctx->max_analyze_duration = AV_TIME_BASE / 10; /* analyze 1/5 of a second of data */
+                m_ctx->max_analyze_duration = AV_TIME_BASE / 10; /* analyze 1/10 of a second of data */
                 avformat_find_stream_info(m_ctx, NULL);
                 m_preroll = false;
             }

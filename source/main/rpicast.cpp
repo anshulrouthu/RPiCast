@@ -48,68 +48,35 @@ int main(int argc, char* argv[])
 
     BasePipe* pipe = new AVPipe("Pipe 0");
 
-    ADevice* src;
-    ADevice* capture;
-    ADevice* sink;
+    if(screen_cast)
+    {
+        pipe->AddDevice(VC_CAPTURE_DEVICE, "Capture 0");
+        pipe->AddDevice(VC_VIDEO_ENCODER,"VidEncoder 0");
+    }
+    else
+    {
+        pipe->AddDevice(VC_FILESRC_DEVICE, "FileSrc",file);
+    }
 
     if (address)
     {
-        sink = pipe->GetDevice(VC_SOCKET_TRANSMITTER, "SocketTx", address);
+        pipe->AddDevice(VC_SOCKET_TRANSMITTER, "SocketTx", address);
     }
     else
     {
-        sink = pipe->GetDevice(VC_FILESINK_DEVICE, "FileSink", "Output.vid");
+        pipe->AddDevice(VC_FILESINK_DEVICE, "FileSink", "Output.vid");
     }
 
-    if(screen_cast)
-    {
-        capture = pipe->GetDevice(VC_CAPTURE_DEVICE, "Capture 0");
-        src = pipe->GetDevice(VC_VIDEO_ENCODER,"VidEncoder 0");
-        capture->Initialize();
-        src->Initialize();
-        pipe->ConnectDevices(capture,src);
-    }
-    else
-    {
-        src = pipe->GetDevice(VC_FILESRC_DEVICE, "FileSrc",file);
-        src->Initialize();
-    }
-
-    sink->Initialize();
-    pipe->ConnectDevices(src,sink);
-
-    DBG_CHECK_STATIC(sink->SendCommand(VC_CMD_START) == VC_FAILURE,exit(0),"Error: Unable to connect to server");
-    src->SendCommand(VC_CMD_START);
-    if(screen_cast)
-    {
-        capture->SendCommand(VC_CMD_START);
-    }
+    pipe->Initialize();
+    pipe->Prepare();
+    pipe->SendCommand(VC_CMD_START);
 
     while(getch() != 'q');
 
+    pipe->SendCommand(VC_CMD_STOP);
+    pipe->Reset();
+    pipe->Uninitialize();
 
-    if(screen_cast)
-    {
-        capture->SendCommand(VC_CMD_STOP);
-    }
-
-    src->SendCommand(VC_CMD_STOP);
-    sink->SendCommand(VC_CMD_STOP);
-
-    if(screen_cast)
-    {
-        pipe->DisconnectDevices(capture,src);
-        capture->Uninitialize();
-        delete capture;
-    }
-
-    pipe->DisconnectDevices(src,sink);
-
-    src->Uninitialize();
-    sink->Uninitialize();
-
-    delete src;
-    delete sink;
     delete pipe;
 
 

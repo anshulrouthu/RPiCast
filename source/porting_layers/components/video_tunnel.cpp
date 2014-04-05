@@ -220,7 +220,7 @@ void VideoTunnel::Task()
                 && ((s > 0 && ilclient_remove_event(m_video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1) == 0)
                     || (s == 0
                         && ilclient_wait_for_event(m_video_decode, OMX_EventPortSettingsChanged, 131, 0, 0, 1,
-                            ILCLIENT_EVENT_ERROR | ILCLIENT_PARAMETER_CHANGED, 10000) == 0)))
+                            ILCLIENT_EVENT_ERROR | ILCLIENT_PARAMETER_CHANGED, 100) == 0)))
             {
                 port_settings_changed++;
 
@@ -229,7 +229,7 @@ void VideoTunnel::Task()
 
                 ilclient_change_component_state(m_video_scheduler, OMX_StateExecuting);
 
-                err = ilclient_setup_tunnel(m_tunnel + 1, 0, 1000);
+                err = ilclient_setup_tunnel(m_tunnel + 1, 0, 100);
                 DBG_CHECK(err, break, "Error: Unable to setup tunnel");
 
                 ilclient_change_component_state(m_video_render, OMX_StateExecuting);

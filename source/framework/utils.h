@@ -34,6 +34,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <list>
+#include <map>
 
 extern "C"
 {

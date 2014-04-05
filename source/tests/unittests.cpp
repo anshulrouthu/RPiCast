@@ -88,6 +88,104 @@ private:
 
 SUITE(APipeFrameworkTest)
 {
+TEST(PipeAPIs)
+{
+    DBGPRINT(LEVEL_ALWAYS, ("Testing PipeAPIs\n"));
+    BasePipe* pipe = new AVPipe("FileIO Pipe 0");
+
+    pipe->AddDevice(VC_FILESINK_DEVICE, "PipeAPIFileSink", "FileSink.out");
+
+    pipe->Initialize();
+    OutputPort* output = new OutputPort("FileIO Output 0", NULL);
+    InputPort* input = new InputPort("FileIO Input 0", NULL);
+    Buffer* buf;
+
+    CHECK_EQUAL(pipe->c_str(), "FileIO Pipe 0");
+    CHECK_EQUAL(pipe->FindDevice(VC_FILESINK_DEVICE)->c_str(), "PipeAPIFileSink");
+    CHECK_EQUAL(output->c_str(), "FileIO Output 0");
+    CHECK_EQUAL(input->c_str(), "FileIO Input 0");
+    CHECK_EQUAL(pipe->ConnectPorts(pipe->FindDevice(VC_FILESINK_DEVICE)->Input(0), output), VC_SUCCESS);
+
+    CHECK_EQUAL(pipe->SendCommand(VC_CMD_START), VC_SUCCESS);
+    usleep(100000); //wait for thread to start
+    buf = output->GetBuffer();
+    CHECK(!!buf);
+    CHECK_EQUAL(buf->SetTag(TAG_START), VC_SUCCESS);
+    CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+
+    buf = output->GetBuffer();
+    CHECK(!!buf);
+    CHECK_EQUAL(buf->WriteData((void* )"VoiceCommand", 12), VC_SUCCESS);
+    CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+
+    buf = output->GetBuffer();
+    CHECK(!!buf);
+    CHECK_EQUAL(buf->SetTag(TAG_END), VC_SUCCESS);
+    CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
+    usleep(100000); // wait for fsink to process buffer
+    CHECK_EQUAL(pipe->SendCommand(VC_CMD_STOP), VC_SUCCESS);
+    CHECK_EQUAL(pipe->DisconnectPorts(pipe->FindDevice(VC_FILESINK_DEVICE)->Input(0), output), VC_SUCCESS);
+    CHECK_EQUAL(pipe->Uninitialize(), VC_SUCCESS);
+    CHECK_EQUAL(pipe->RemoveDevice(VC_FILESINK_DEVICE), VC_SUCCESS);
+
+    CHECK_EQUAL(pipe->AddDevice(VC_FILESRC_DEVICE, "PipeAPIFileSrc", "FileSink.out"), VC_SUCCESS);
+    CHECK_EQUAL(pipe->Initialize(), VC_SUCCESS);
+
+    CHECK_EQUAL(pipe->FindDevice(VC_FILESRC_DEVICE)->c_str(), "PipeAPIFileSrc");
+    CHECK_EQUAL(pipe->ConnectPorts(input, pipe->FindDevice(VC_FILESRC_DEVICE)->Output(0)), VC_SUCCESS);
+
+    CHECK_EQUAL(pipe->SendCommand(VC_CMD_START), VC_SUCCESS);
+
+    //wait untill a buffer is pushed but source device
+    while (!input->IsBufferAvailable())
+        ;
+    CHECK(input->IsBufferAvailable());
+
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK_EQUAL(buf->GetTag(), TAG_START);
+    CHECK_EQUAL(input->RecycleBuffer(buf), VC_SUCCESS);
+
+    //wait untill a buffer is pushed by source device
+    while (!input->IsBufferAvailable())
+        ;
+    CHECK(input->IsBufferAvailable());
+    buf = input->GetFilledBuffer();
+    CHECK(!!buf);
+    CHECK(!memcmp(buf->GetData(), "VoiceCommand", 12));
+    CHECK_EQUAL(pipe->SendCommand(VC_CMD_STOP), VC_SUCCESS);
+    CHECK_EQUAL(pipe->DisconnectPorts(input, pipe->FindDevice(VC_FILESRC_DEVICE)->Output(0)), VC_SUCCESS);
+    pipe->Uninitialize();
+    CHECK_EQUAL(pipe->RemoveDevice(VC_FILESRC_DEVICE), VC_SUCCESS);
+
+    FILE* fp;
+    char c[12];
+    fp = fopen("FileSink.out", "rb");
+    CHECK_EQUAL(fread(c, 1, 12, fp), (uint32_t )12);
+    CHECK(!memcmp(c, "VoiceCommand", 12));
+
+    fclose(fp);
+    delete output;
+    delete input;
+
+    CHECK_EQUAL(pipe->AddDevice(VC_FILESRC_DEVICE, "PipeAPIFileSrc", "FileSrc.in"), VC_SUCCESS);
+    CHECK_EQUAL(pipe->AddDevice(VC_FILESINK_DEVICE, "PipeAPIFileSink", "FileSink.out"), VC_SUCCESS);
+
+    pipe->Initialize();
+    pipe->Prepare();
+    pipe->SendCommand(VC_CMD_START);
+
+    usleep(10000);
+
+    pipe->SendCommand(VC_CMD_STOP);
+    pipe->Reset();
+    pipe->Uninitialize();
+    CHECK_EQUAL(pipe->RemoveDevice(VC_FILESRC_DEVICE), VC_SUCCESS);
+    CHECK_EQUAL(pipe->RemoveDevice(VC_FILESINK_DEVICE), VC_SUCCESS);
+
+    delete pipe;
+}
+
 TEST(ADeviceAPIs)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing ADeviceAPIs\n"));

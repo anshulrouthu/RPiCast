@@ -1,6 +1,4 @@
 
-# use pkg-config for getting CFLAGS and LDLIBS
-
 TOOLCHAINPATH:=rpi-toolchain/bin
 CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
 BUILD_PATH:=rpi-build
@@ -56,6 +54,7 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 
 .PHONY: all
 all: $(BUILD_PATH) libs $(TARGET) sample tests
+	 @scp -r rpi-build/* root@192.168.1.3:workspace/
 
 $(BUILD_PATH):
 	          @mkdir -p $@

@@ -111,9 +111,48 @@ class BasePipe
 {
 public:
     BasePipe(std::string name);
-    virtual ~BasePipe()
-    {
-    }
+    virtual ~BasePipe();
+
+    /**
+     * Initialize the pipe and its devices list
+     */
+    virtual VC_STATUS Initialize();
+
+    /**
+     * Uninitialize the pipe and devices list
+     */
+    virtual VC_STATUS Uninitialize();
+
+    /**
+     *  Query for the device type and add the device to m_devices to future reference
+     */
+    virtual VC_STATUS AddDevice(VC_DEVICETYPE dev, std::string name, const char* args = "");
+
+    /**
+     *  Remove the requested device from the pipes device list
+     */
+    virtual VC_STATUS RemoveDevice(VC_DEVICETYPE dev);
+
+    /**
+     * Find and return the device form the m_devices, if available
+     * @param dev requested device type
+     */
+    virtual ADevice* FindDevice(VC_DEVICETYPE dev);
+
+    /**
+     * Send a start command to all the devices in the list
+     */
+    virtual VC_STATUS SendCommand(VC_CMD cmd);
+
+    /**
+     * Connects all the device in the sequence
+     */
+    virtual VC_STATUS Prepare();
+
+    /**
+     * Diaconnects all the devices in the list
+     */
+    virtual VC_STATUS Reset();
 
     /**
      * Query the pipe for available devices
@@ -154,6 +193,8 @@ public:
     }
 private:
     std::string m_name;
+    std::list<ADevice*> m_devices;
+    std::map<VC_DEVICETYPE, ADevice*> m_devmap;
 };
 
 /**
