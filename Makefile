@@ -86,7 +86,8 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_osapi           \
         $(BUILD_PATH)/test_socket          \
         $(BUILD_PATH)/test_socket_capture  \
-        $(BUILD_PATH)/test_demux
+        $(BUILD_PATH)/test_demux           \
+        $(BUILD_PATH)/test_ssdp
 
 TEST_SRC_DIR:= source/tests
 

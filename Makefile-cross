@@ -54,7 +54,6 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 
 .PHONY: all
 all: $(BUILD_PATH) libs $(TARGET) sample tests
-	 @scp -r rpi-build/* root@192.168.1.3:workspace/
 
 $(BUILD_PATH):
 	          @mkdir -p $@
@@ -94,7 +93,7 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_socket          \
         $(BUILD_PATH)/test_socket_capture  \
         $(BUILD_PATH)/test_demux           \
-        $(BUILD_PATH)/test_player
+        $(BUILD_PATH)/test_ssdp
 
 TEST_SRC_DIR:= source/tests
 
