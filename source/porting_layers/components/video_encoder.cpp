@@ -45,7 +45,7 @@ VC_STATUS VideoEncoder::Initialize()
     m_encodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
     m_encodeCtx->width = 1280;
     m_encodeCtx->height = 720;
-    m_encodeCtx->time_base = (AVRational ) { 1, 30 };
+    m_encodeCtx->time_base = (AVRational ) { 1, 24 };
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
     m_encodeCtx->bit_rate = 1000 * 1000;
     //m_encodeCtx->rc_max_rate = 300 * 1024;
@@ -77,7 +77,6 @@ VC_STATUS VideoEncoder::Initialize()
     }
 
     DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s", codec->long_name);
-
 
     av_dump_format(m_fmtCtx, 0, NULL, 1);
     m_output->OpenOutput(m_fmtCtx);
@@ -172,11 +171,11 @@ void VideoEncoder::Task()
             if (got_output)
             {
                 pkt.stream_index = m_vidstream->index;
-                if(pkt.pts != AV_NOPTS_VALUE)
+                if (pkt.pts != AV_NOPTS_VALUE )
                 {
                     pkt.pts = av_rescale_q(pkt.pts, m_encodeCtx->time_base, m_vidstream->time_base);
                 }
-                if(pkt.dts != AV_NOPTS_VALUE)
+                if (pkt.dts != AV_NOPTS_VALUE )
                 {
                     pkt.dts = av_rescale_q(pkt.dts, m_encodeCtx->time_base, m_vidstream->time_base);
                 }
@@ -223,8 +222,8 @@ void VideoEncoder::Task()
     av_write_trailer(m_fmtCtx);
 }
 
-OutputCustomIO::OutputCustomIO(std::string name, ADevice* device):
-    OutputPort(name,device),
+OutputCustomIO::OutputCustomIO(std::string name, ADevice* device) :
+    OutputPort(name, device),
     m_ctx(NULL)
 {
 }
@@ -265,5 +264,5 @@ int OutputCustomIO::Write(uint8_t *buf, int size)
 int OutputCustomIO::write_cb(void *opaque, uint8_t *buf, int size)
 {
     OutputCustomIO* self = static_cast<OutputCustomIO*>(opaque);
-    return(self->Write(buf,size));
+    return (self->Write(buf, size));
 }

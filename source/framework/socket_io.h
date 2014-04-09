@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 
 #define SOCKET_PORT 88888
-#define UDP_PACKET_MAXSIZE ((20 * 1024))
+#define UDP_PACKET_MAXSIZE ((16 * 1024))
 
 class SocketInput;
 class SocketOutput;
@@ -44,7 +44,9 @@ class SocketInDevice: public SocketDevice
 {
 public:
     SocketInDevice(std::string name, BasePipe* pipe);
-    virtual ~SocketInDevice(){}
+    virtual ~SocketInDevice()
+    {
+    }
     virtual VC_STATUS SendCommand(VC_CMD cmd);
 private:
     InputPort* m_socket_input;
@@ -54,7 +56,9 @@ class SocketOutDevice: public SocketDevice
 {
 public:
     SocketOutDevice(std::string name, BasePipe* pipe, const char* addr = "27.0.0.1");
-    virtual ~SocketOutDevice(){}
+    virtual ~SocketOutDevice()
+    {
+    }
     virtual VC_STATUS Notify(VC_EVENT* evt);
     virtual VC_STATUS SendCommand(VC_CMD cmd);
 

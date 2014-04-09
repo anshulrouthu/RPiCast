@@ -55,7 +55,9 @@ class OMXInputPort: public InputPort
 
 public:
     OMXInputPort(std::string name, ADevice* device);
-    virtual ~OMXInputPort(){}
+    virtual ~OMXInputPort()
+    {
+    }
 
     virtual Buffer* GetEmptyBuffer();
 private:
@@ -68,7 +70,9 @@ class OMXBuffer: public Buffer
     friend class VideoTunnel;
 public:
     OMXBuffer(OMX_BUFFERHEADERTYPE* buf);
-    virtual ~OMXBuffer(){}
+    virtual ~OMXBuffer()
+    {
+    }
 
     virtual size_t GetMaxSize();
     virtual size_t GetSize();

@@ -45,31 +45,31 @@ int main(int argc, char* argv[])
         }
     }
 
-
     BasePipe* pipe = new AVPipe("Pipe 0");
 
-    ADevice* fsrc = pipe->GetDevice(VC_SOCKET_RECEIVER,"FileSrcDevice",file);
-    ADevice* demux = pipe->GetDevice(VC_DEMUX_DEVICE,"DemuxDevice");
-    ADevice* sink = pipe->GetDevice(VC_FILESINK_DEVICE,"VideoTunnel","Demux.out");
+    ADevice* fsrc = pipe->GetDevice(VC_SOCKET_RECEIVER, "FileSrcDevice", file);
+    ADevice* demux = pipe->GetDevice(VC_DEMUX_DEVICE, "DemuxDevice");
+    ADevice* sink = pipe->GetDevice(VC_FILESINK_DEVICE, "VideoTunnel", "Demux.out");
 
     fsrc->Initialize();
     demux->Initialize();
     sink->Initialize();
 
-    pipe->ConnectDevices(fsrc,sink);
+    pipe->ConnectDevices(fsrc, sink);
     //pipe->ConnectDevices(demux,sink);
 
     fsrc->SendCommand(VC_CMD_START);
     demux->SendCommand(VC_CMD_START);
     sink->SendCommand(VC_CMD_START);
 
-    while(getch() != 'q');
+    while (getch() != 'q')
+        ;
 
     fsrc->SendCommand(VC_CMD_STOP);
     demux->SendCommand(VC_CMD_STOP);
     sink->SendCommand(VC_CMD_STOP);
 
-    pipe->DisconnectDevices(fsrc,sink);
+    pipe->DisconnectDevices(fsrc, sink);
     //pipe->DisconnectDevices(demux,sink);
 
     fsrc->Uninitialize();
@@ -83,8 +83,4 @@ int main(int argc, char* argv[])
 
     return (0);
 }
-
-
-
-
 

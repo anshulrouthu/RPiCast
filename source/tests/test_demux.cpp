@@ -45,32 +45,32 @@ int main(int argc, char* argv[])
         }
     }
 
-
     BasePipe* pipe = new AVPipe("Pipe 0");
 
-    ADevice* fsrc = pipe->GetDevice(VC_FILESRC_DEVICE,"FileSrcDevice",file);
-    ADevice* demux = pipe->GetDevice(VC_DEMUX_DEVICE,"DemuxDevice");
-    ADevice* fsink = pipe->GetDevice(VC_FILESINK_DEVICE,"FileSinkDevice","Demux.out");
+    ADevice* fsrc = pipe->GetDevice(VC_FILESRC_DEVICE, "FileSrcDevice", file);
+    ADevice* demux = pipe->GetDevice(VC_DEMUX_DEVICE, "DemuxDevice");
+    ADevice* fsink = pipe->GetDevice(VC_FILESINK_DEVICE, "FileSinkDevice", "Demux.out");
 
     fsrc->Initialize();
     demux->Initialize();
     fsink->Initialize();
 
-    pipe->ConnectDevices(fsrc,demux);
-    pipe->ConnectDevices(demux,fsink);
+    pipe->ConnectDevices(fsrc, demux);
+    pipe->ConnectDevices(demux, fsink);
 
     fsrc->SendCommand(VC_CMD_START);
     demux->SendCommand(VC_CMD_START);
     fsink->SendCommand(VC_CMD_START);
 
-    while(getch() != 'q');
+    while (getch() != 'q')
+        ;
 
     fsrc->SendCommand(VC_CMD_STOP);
     demux->SendCommand(VC_CMD_STOP);
     fsink->SendCommand(VC_CMD_STOP);
 
-    pipe->DisconnectDevices(fsrc,demux);
-    pipe->DisconnectDevices(demux,fsink);
+    pipe->DisconnectDevices(fsrc, demux);
+    pipe->DisconnectDevices(demux, fsink);
 
     fsrc->Uninitialize();
     demux->Uninitialize();
@@ -83,8 +83,4 @@ int main(int argc, char* argv[])
 
     return (0);
 }
-
-
-
-
 

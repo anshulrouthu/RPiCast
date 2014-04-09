@@ -23,7 +23,6 @@
 #ifndef VIDEO_CAPTURE_H_
 #define VIDEO_CAPTURE_H_
 
-
 extern "C"
 {
 #ifndef INT64_C

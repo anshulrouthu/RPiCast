@@ -350,7 +350,7 @@ TEST(SocketIOTest)
 {
     DBGPRINT(LEVEL_ALWAYS, ("Testing SocketIOTest\n"));
     InputPort* input = new SocketInput("Socket Input", NULL, "127.0.0.1", 9000);
-    OutputPort* output1 = new SocketOutput("Socket Output1", NULL,  "127.0.0.1", 9000);
+    OutputPort* output1 = new SocketOutput("Socket Output1", NULL, "127.0.0.1", 9000);
 
     Buffer* buf = output1->GetBuffer();
     CHECK(!!buf);
@@ -378,7 +378,7 @@ TEST(SocketIOTest)
     input->RecycleBuffer(buf);
     buf = NULL;
 
-    OutputPort* output2 = new SocketOutput("Socket Output2", NULL,  "127.0.0.1", 9000);
+    OutputPort* output2 = new SocketOutput("Socket Output2", NULL, "127.0.0.1", 9000);
     buf = output2->GetBuffer();
     CHECK(!!buf);
     buf->WriteData((void*) "RPiCast Test2", 13);
@@ -411,7 +411,7 @@ TEST(SocketIODeviceTest)
     server->Initialize();
     client->Initialize();
 
-    pipe->ConnectPorts(client->Input(),output);
+    pipe->ConnectPorts(client->Input(), output);
     pipe->ConnectPorts(input, server->Output());
 
     CHECK_EQUAL(server->SendCommand(VC_CMD_START), VC_SUCCESS);
@@ -423,7 +423,8 @@ TEST(SocketIODeviceTest)
     output->PushBuffer(buf);
     buf = NULL;
 
-    while (!input->IsBufferAvailable());
+    while (!input->IsBufferAvailable())
+        ;
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -434,7 +435,7 @@ TEST(SocketIODeviceTest)
     client->SendCommand(VC_CMD_STOP);
     server->SendCommand(VC_CMD_STOP);
 
-    pipe->DisconnectPorts(client->Input(),output);
+    pipe->DisconnectPorts(client->Input(), output);
     pipe->DisconnectPorts(input, server->Output());
 
     server->Uninitialize();

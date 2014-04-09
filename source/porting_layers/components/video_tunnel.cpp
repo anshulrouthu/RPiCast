@@ -70,8 +70,7 @@ VC_STATUS VideoTunnel::Initialize()
     m_list[0] = m_video_decode;
 
     // create video_render
-    if (status == 0
-        && ilclient_create_component(m_handle, &m_video_render, "video_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if (status == 0 && ilclient_create_component(m_handle, &m_video_render, "video_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
         status = -14;
     m_list[1] = m_video_render;
 
@@ -85,13 +84,11 @@ VC_STATUS VideoTunnel::Initialize()
     cstate.nVersion.nVersion = OMX_VERSION;
     cstate.eState = OMX_TIME_ClockStateWaitingForStartTime;
     cstate.nWaitMask = 1;
-    if (clock != NULL
-        && OMX_SetParameter(ILC_GET_HANDLE(m_clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
+    if (clock != NULL && OMX_SetParameter(ILC_GET_HANDLE(m_clock), OMX_IndexConfigTimeClockState, &cstate) != OMX_ErrorNone)
         status = -13;
 
     // create video_scheduler
-    if (status == 0
-        && ilclient_create_component(m_handle, &m_video_scheduler, "video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if (status == 0 && ilclient_create_component(m_handle, &m_video_scheduler, "video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
         status = -14;
     m_list[3] = m_video_scheduler;
 
@@ -175,13 +172,13 @@ VC_STATUS VideoTunnel::SendCommand(VC_CMD cmd)
 
 Buffer* VideoTunnel::AllocateBuffer(int portno)
 {
-    if(!m_ready)
+    if (!m_ready)
     {
-       AutoMutex automutex(&m_mutex);
-       while(!m_ready)
-       {
-           m_cv.Wait();
-       }
+        AutoMutex automutex(&m_mutex);
+        while (!m_ready)
+        {
+            m_cv.Wait();
+        }
     }
 
     OMX_BUFFERHEADERTYPE* buf = ilclient_get_input_buffer(m_video_decode, 130, 1);
@@ -235,7 +232,7 @@ void VideoTunnel::Task()
                 ilclient_change_component_state(m_video_render, OMX_StateExecuting);
             }
 
-            if(b->GetTag() == TAG_EOS)
+            if (b->GetTag() == TAG_EOS)
             {
                 DBG_MSG("Receiver EOS Tag");
                 OMXBuffer* buf = dynamic_cast<OMXBuffer*>(AllocateBuffer());

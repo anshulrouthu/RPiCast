@@ -31,7 +31,7 @@ BasePipe::BasePipe(std::string name) :
  */
 BasePipe::~BasePipe()
 {
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
         delete (*it);
         (*it) = NULL;
@@ -47,10 +47,10 @@ BasePipe::~BasePipe()
 VC_STATUS BasePipe::Initialize()
 {
     VC_STATUS err;
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
         err = (*it)->Initialize();
-        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE),"Error: Unable to initialize device %s", (*it)->c_str());
+        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to initialize device %s", (*it)->c_str());
     }
     return (VC_SUCCESS);
 }
@@ -61,10 +61,10 @@ VC_STATUS BasePipe::Initialize()
 VC_STATUS BasePipe::Uninitialize()
 {
     VC_STATUS err;
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
         err = (*it)->Uninitialize();
-        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE),"Error: Unable to uninitialize device %s", (*it)->c_str());
+        DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to uninitialize device %s", (*it)->c_str());
     }
     return (VC_SUCCESS);
 }
@@ -90,15 +90,15 @@ VC_STATUS BasePipe::AddDevice(VC_DEVICETYPE devtype, std::string name, const cha
  */
 VC_STATUS BasePipe::RemoveDevice(VC_DEVICETYPE dev)
 {
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
-        if(m_devmap[dev] == (*it))
+        if (m_devmap[dev] == (*it))
         {
-             delete (*it);
-             (*it) = NULL;
-             m_devices.erase(it);
-             m_devmap.erase(dev);
-             return (VC_SUCCESS);
+            delete (*it);
+            (*it) = NULL;
+            m_devices.erase(it);
+            m_devmap.erase(dev);
+            return (VC_SUCCESS);
         }
     }
 
@@ -112,7 +112,7 @@ VC_STATUS BasePipe::RemoveDevice(VC_DEVICETYPE dev)
 VC_STATUS BasePipe::SendCommand(VC_CMD cmd)
 {
     VC_STATUS err;
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
         err = (*it)->SendCommand(cmd);
         DBG_CHECK(err != VC_SUCCESS, return (VC_FAILURE), "Error: Unable to send command to %s", (*it)->c_str());
@@ -127,9 +127,9 @@ VC_STATUS BasePipe::SendCommand(VC_CMD cmd)
 VC_STATUS BasePipe::Prepare()
 {
     VC_STATUS err;
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
-        if(it != m_devices.begin())
+        if (it != m_devices.begin())
         {
             std::list<ADevice*>::iterator prev = it;
             --prev;
@@ -149,9 +149,9 @@ VC_STATUS BasePipe::Prepare()
 VC_STATUS BasePipe::Reset()
 {
     VC_STATUS err;
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
-        if(it != m_devices.begin())
+        if (it != m_devices.begin())
         {
             std::list<ADevice*>::iterator prev = it;
             --prev;
@@ -168,9 +168,9 @@ VC_STATUS BasePipe::Reset()
  */
 ADevice* BasePipe::FindDevice(VC_DEVICETYPE dev)
 {
-    for(std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
+    for (std::list<ADevice*>::iterator it = m_devices.begin(); it != m_devices.end(); it++)
     {
-        if(m_devmap[dev] == (*it))
+        if (m_devmap[dev] == (*it))
         {
             return (*it);
         }

@@ -142,7 +142,7 @@ void FileSink::Task()
         else
         {
             AutoMutex automutex(&m_mutex);
-            while(!m_input->IsBufferAvailable() && m_state)
+            while (!m_input->IsBufferAvailable() && m_state)
             {
                 m_cv.Wait();
             }

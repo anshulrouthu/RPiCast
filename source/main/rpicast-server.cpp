@@ -19,11 +19,14 @@
 #include "utils.h"
 #include <stdio.h>
 #include "av_pipe.h"
+#include "ssdpdiscovery.h"
 
 int main(int argc, char* argv[])
 {
     int c;
     char* filename = NULL;
+
+    SSDPServer ssdp_s("SSDPServer");
 
     while ((c = getopt(argc, argv, "s?l:d:f:t:")) != -1)
     {

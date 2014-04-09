@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
     OS_THREAD_HANDLE handle;
 
-    OS_THREAD_CREATE(&handle, NULL, &ThreadTest, NULL );
+    OS_THREAD_CREATE(&handle, NULL, &ThreadTest, NULL);
     usleep(100000);
     {
         AutoMutex automutex(&mutex);
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
         cv.Notify();
     }
 
-    OS_THREAD_JOIN(&handle, NULL );
+    OS_THREAD_JOIN(&handle, NULL);
 
     DBGPRINT(LEVEL_ALWAYS, ("OSAPI Component Test Successful\n"));
     return (0);

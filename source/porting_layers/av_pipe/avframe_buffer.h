@@ -20,5 +20,4 @@ private:
 
 };
 
-
 #endif /* AVFRAME_BUFFER_H_ */

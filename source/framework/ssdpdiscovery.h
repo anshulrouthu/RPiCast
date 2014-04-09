@@ -18,18 +18,32 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 
-#define SSDP_PORT 54321
-#define SSDP_GROUP "225.1.1.1"
+#define SSDP_PORT 1900
+#define SSDP_GROUP "239.255.255.250"
 #define SSDP_STRING_SIZE 1024
-#define SSDP_INFO_DISCOVERY_STRING "discover.rpicast.device.info"
-#define SSDP_DEVICE_NAME "RpiCast Server"
+#define SSDP_DISCOVERY_REQUEST  "M-SEARCH * HTTP/1.1\r\n"         \
+                                 "HOST: 239.255.255.250:1900\r\n"  \
+                                 "MAN: \"ssdp:discover\"\r\n"      \
+                                 "MX: 10\r\n"                       \
+                                 "ST: urn:dial-multiscreen-org:service:rpicast:1\r\n\r\n"
+
+//#define SSDP_DISCOVERY_RESPONSE "HTTP/1.1 200 OK\r\n"                                \
+                                 "LOCATION: http://%s:%d/dd.xml\r\n"                  \
+                                 "CACHE-CONTROL: max-age=1800\r\n"                    \
+                                 "EXT:\r\n"                                           \
+                                 "BOOTID.UPNP.ORG: 1\r\n"                             \
+                                 "SERVER: Linux/2.6 UPnP/1.0 quick_ssdp/1.0\r\n"      \
+                                 "ST: urn:dial-multiscreen-org:service:rpicast:1\r\n" \
+                                 "USN: uuid:%s::urn:dial-multiscreen-org:service:rpicast:1\r\n\r\n";
+
+#define SSDP_DEVICE_NAME "RPiCast"
 
 typedef struct ssdp_server
 {
     std::string name;
     std::string ip;
 
-}SSDP_SERVER;
+} SSDP_SERVER;
 
 typedef std::list<SSDP_SERVER*> SSDPServerList;
 

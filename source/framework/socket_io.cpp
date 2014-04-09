@@ -9,8 +9,8 @@
 
 SocketDevice::SocketDevice(std::string name, BasePipe* pipe) :
     ADevice(name, pipe),
-    m_input(NULL ),
-    m_output(NULL )
+    m_input(NULL),
+    m_output(NULL)
 {
 }
 
@@ -55,7 +55,7 @@ VC_STATUS SocketDevice::SendCommand(VC_CMD cmd)
 
 SocketInDevice::SocketInDevice(std::string name, BasePipe* pipe) :
     SocketDevice(name, pipe),
-    m_socket_input(NULL )
+    m_socket_input(NULL)
 {
     DBG_MSG("Enter");
 }
@@ -77,7 +77,7 @@ VC_STATUS SocketInDevice::SendCommand(VC_CMD cmd)
 
 SocketOutDevice::SocketOutDevice(std::string name, BasePipe* pipe, const char* addr) :
     SocketDevice(name, pipe),
-    m_socket_output(NULL ),
+    m_socket_output(NULL),
     m_server_addr(addr),
     m_device_ready(false)
 {
@@ -138,7 +138,7 @@ SocketInput::SocketInput(std::string name, ADevice* device, const char* addr, in
 SocketInput::~SocketInput()
 {
     Stop();
-    shutdown(m_handle,SHUT_RDWR);
+    shutdown(m_handle, SHUT_RDWR);
     close(m_handle);
     Join();
 }

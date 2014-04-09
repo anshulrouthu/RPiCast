@@ -59,7 +59,7 @@ private:
 
 };
 
-class OutputCustomIO : public OutputPort
+class OutputCustomIO: public OutputPort
 {
 public:
     OutputCustomIO(std::string name, ADevice* device);

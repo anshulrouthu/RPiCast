@@ -44,10 +44,10 @@ ADevice* AVPipe::GetDevice(VC_DEVICETYPE devtype, std::string name, const char* 
     case VC_SOCKET_TRANSMITTER:
         return (new SocketOutDevice(name, this, args));
     case VC_DEMUX_DEVICE:
-        return (new DemuxDevice(name,this));
+        return (new DemuxDevice(name, this));
         break;
 #ifdef ARM_CROSS
-    case VC_VIDEO_TUNNEL:
+        case VC_VIDEO_TUNNEL:
         return (new VideoTunnel(name));
 #endif
     default:

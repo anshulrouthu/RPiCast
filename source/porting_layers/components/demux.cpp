@@ -50,8 +50,8 @@ VC_STATUS DemuxDevice::Uninitialize()
 
     for (std::map<int, OutputPort*>::iterator it = m_output.begin(); it != m_output.end(); it++)
     {
-        delete (*it).second;
-        (*it).second = NULL;
+        delete it->second;
+        it->second = NULL;
     }
 
     if (m_h264filter_ctx)
@@ -117,8 +117,8 @@ void DemuxDevice::Task()
                 m_input->OpenInput(m_ctx);
 
                 avformat_open_input(&m_ctx, "", NULL, NULL);
-                m_ctx->max_analyze_duration = AV_TIME_BASE / 10; /* analyze 1/10 of a second of data */
-                avformat_find_stream_info(m_ctx, NULL);
+                //m_ctx->max_analyze_duration = AV_TIME_BASE / 10; /* analyze 1/10 of a second of data */
+                //avformat_find_stream_info(m_ctx, NULL);
                 m_preroll = false;
             }
 
@@ -141,8 +141,8 @@ void DemuxDevice::Task()
             {
                 AVPacket new_pkt = pkt;
                 //av_init_packet(&new_pkt);
-                int result = av_bitstream_filter_filter(m_h264filter_ctx, m_ctx->streams[pkt.stream_index]->codec, NULL,
-                    &new_pkt.data, &new_pkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
+                int result = av_bitstream_filter_filter(m_h264filter_ctx, m_ctx->streams[pkt.stream_index]->codec, NULL, &new_pkt.data,
+                    &new_pkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
 
                 /* if bitstream filter failed, just print a warning because it may be OK for
                  * some cases, such as BD AVC video */

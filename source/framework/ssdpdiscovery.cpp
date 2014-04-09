@@ -71,10 +71,12 @@ void SSDPServer::Task()
 
         size_t bytes_read = recvfrom(m_handle, buffer, SSDP_STRING_SIZE, 0, (struct sockaddr *) &client_addr, &client_len);
 
-        if (bytes_read && !strcmp(buffer, SSDP_INFO_DISCOVERY_STRING))
+        if (bytes_read && !strcmp(buffer, SSDP_DISCOVERY_REQUEST))
         {
-            DBG_MSG("Receiver SSDP discovery request");
-            std::string ssdp_reply = std::string(SSDP_DEVICE_NAME) + "\r\n" + std::string(m_ifaddr);
+            DBG_MSG("Received SSDP discovery request");
+            char hostname[1024];
+            gethostname(hostname, 1024);
+            std::string ssdp_reply = std::string(SSDP_DEVICE_NAME) + " [" + hostname + "]\r\n" + std::string(m_ifaddr);
             sendto(m_handle, ssdp_reply.c_str(), ssdp_reply.length(), 0, (struct sockaddr *) &client_addr, sizeof(client_addr));
         }
 
@@ -118,12 +120,28 @@ SSDPClient::~SSDPClient()
     shutdown(m_handle, SHUT_RDWR);
     close(m_handle);
     Join();
+
+    for (SSDPServerList::iterator it = m_servers.begin(); it != m_servers.end(); it++)
+    {
+        delete (*it);
+        (*it) = NULL;
+    }
+
+    m_servers.clear();
 }
 
 VC_STATUS SSDPClient::SearchDevices(SSDPServerList& list)
 {
-    size_t bytes = sendto(m_handle, SSDP_INFO_DISCOVERY_STRING, sizeof(SSDP_INFO_DISCOVERY_STRING), 0, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
-    DBG_CHECK(bytes != sizeof(SSDP_INFO_DISCOVERY_STRING),, "Error: Unable send disconnect call");
+    for (SSDPServerList::iterator it = m_servers.begin(); it != m_servers.end(); it++)
+    {
+        delete (*it);
+        (*it) = NULL;
+    }
+    m_servers.clear();
+
+    size_t bytes = sendto(m_handle, SSDP_DISCOVERY_REQUEST, sizeof(SSDP_DISCOVERY_REQUEST), 0, (struct sockaddr *) &m_server_addr,
+        sizeof(m_server_addr));
+    DBG_CHECK(bytes != sizeof(SSDP_DISCOVERY_REQUEST),, "Error: Unable send disconnect call");
 
     AutoMutex automutex(&m_mutex);
     m_cv.Wait(1000);
@@ -149,6 +167,7 @@ void SSDPClient::Task()
             std::string ssdp_reply = std::string(buffer);
             std::string ip;
             std::string name;
+
             size_t pos = ssdp_reply.find("\r\n");
 
             if (pos != std::string::npos)
@@ -156,8 +175,23 @@ void SSDPClient::Task()
                 SSDP_SERVER* ssdpserver = new SSDP_SERVER();
                 ssdpserver->ip = ssdp_reply.substr(pos + 2, ssdp_reply.length());
                 ssdpserver->name = ssdp_reply.substr(0, pos);
-                m_servers.push_back(ssdpserver);
-                DBGPRINT(LEVEL_MESSAGE, ("* %s: %s\n", ssdpserver->name.c_str(), ssdpserver->ip.c_str()));
+
+                bool add = true;
+
+                for (SSDPServerList::iterator it = m_servers.begin(); it != m_servers.end(); it++)
+                {
+                    if ((*it)->ip == ssdpserver->ip)
+                    {
+                        add = false;
+                        break;
+                    }
+                }
+
+                if (add)
+                {
+                    m_servers.push_back(ssdpserver);
+                }
+                DBGPRINT(LEVEL_TRACE, ("* %s: %s\n", ssdpserver->name.c_str(), ssdpserver->ip.c_str()));
             }
         }
     }
