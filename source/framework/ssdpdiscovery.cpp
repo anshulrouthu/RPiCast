@@ -1,9 +1,25 @@
-/*
- * discovery.cpp
- *
- *  Created on: Apr 6, 2014
- *      Author: anshul
- */
+/*********************************************************************
+ RPiCast ( Screencasting application using RaspberryPi )
+
+ Copyright (C)  Anshul Routhu <anshul.m67@gmail.com>
+
+ All rights reserved.
+
+ This file ssdpdiscovery.cpp is part of RPiCast project
+
+ RPiCast is a free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************/
 
 #include "ssdpdiscovery.h"
 
@@ -31,7 +47,7 @@ SSDPServer::SSDPServer(std::string name) :
     DBG_CHECK(err < 0, return, "Error(%d): Unable to bind socket", err);
 
     group.imr_multiaddr.s_addr = inet_addr(SSDP_GROUP);
-    group.imr_interface.s_addr = htonl(INADDR_ANY );
+    group.imr_interface.s_addr = htonl(INADDR_ANY);
 
     err = setsockopt(m_handle, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &group, sizeof(group));
     DBG_CHECK(err < 0,, "Error: Unable add socket to group membership");
@@ -71,9 +87,9 @@ void SSDPServer::Task()
 
         size_t bytes_read = recvfrom(m_handle, buffer, SSDP_STRING_SIZE, 0, (struct sockaddr *) &client_addr, &client_len);
 
+        DBG_MSG("Received SSDP discovery request");
         if (bytes_read && !strcmp(buffer, SSDP_DISCOVERY_REQUEST))
         {
-            DBG_MSG("Received SSDP discovery request");
             char hostname[1024];
             gethostname(hostname, 1024);
             std::string ssdp_reply = std::string(SSDP_DEVICE_NAME) + " [" + hostname + "]\r\n" + std::string(m_ifaddr);
@@ -101,13 +117,13 @@ SSDPClient::SSDPClient(std::string name) :
 
     /* bind any port number */
     m_local_addr.sin_family = AF_INET;
-    m_local_addr.sin_addr.s_addr = htonl(INADDR_ANY );
+    m_local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     m_local_addr.sin_port = htons(0);
 
     err = bind(m_handle, (struct sockaddr *) &m_local_addr, sizeof(m_local_addr));
     DBG_CHECK(err < 0,, "Error: Unable to bind socket");
 
-    localInterface.s_addr = htonl(INADDR_ANY );
+    localInterface.s_addr = htonl(INADDR_ANY);
     err = setsockopt(m_handle, IPPROTO_IP, IP_MULTICAST_IF, &localInterface, sizeof(localInterface));
     DBG_CHECK(err < 0,, "Error: Unable to set IP_MULTICAST_IF");
 

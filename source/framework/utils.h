@@ -1,21 +1,25 @@
 /***********************************************************
- voiceCommand
+ RPiCast ( Screencasting application using RaspberryPi )
 
- Copyright (c) 2014 Anshul Routhu <anshul.m67@gmail.com>
+ Copyright (C)  Anshul Routhu <anshul.m67@gmail.com>
 
  All rights reserved.
 
- This software is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- express or implied.
- ***********************************************************/
+ This file utils.h is part of RPiCast project
 
-/*
- * utils.h
- *
- *  Created on: Jan 9, 2014
- *      Author: anshul
- */
+ RPiCast is a free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************/
 
 #ifndef UTILS_H_
 #define UTILS_H_
@@ -127,7 +131,8 @@ typedef enum
 
 typedef enum
 {
-    VC_CMD_START = 0, VC_CMD_STOP
+    VC_CMD_START = 0,
+    VC_CMD_STOP
 } VC_CMD;
 
 typedef enum
@@ -150,12 +155,19 @@ typedef enum
 
 typedef enum
 {
-    VC_FAILURE = 0, VC_SUCCESS, VC_NOT_IMPLEMENTED, VC_UNDEFINED
+    VC_FAILURE = 0,
+    VC_SUCCESS,
+    VC_NOT_IMPLEMENTED,
+    VC_UNDEFINED
 } VC_STATUS;
 
 typedef enum
 {
-    TAG_NONE = 0, TAG_START, TAG_BREAK, TAG_END, TAG_EOS
+    TAG_NONE = 0,
+    TAG_START,
+    TAG_BREAK,
+    TAG_END,
+    TAG_EOS
 } BUF_TAG;
 
 #endif /* UTILS_H_ */

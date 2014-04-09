@@ -1,21 +1,25 @@
-/***********************************************************
- voiceCommand
+/*********************************************************************
+ RPiCast ( Screencasting application using RaspberryPi )
 
- Copyright (c) 2014 Anshul Routhu <anshul.m67@gmail.com>
+ Copyright (C)  Anshul Routhu <anshul.m67@gmail.com>
 
  All rights reserved.
 
- This software is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- express or implied.
- ***********************************************************/
+ This file unittests.cpp is part of RPiCast project
 
-/*
- * test_pipe.cpp
- *
- *  Created on: Feb 6, 2014
- *      Author: anshul
- */
+ RPiCast is a free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *********************************************************************/
 
 #include "utils.h"
 #include <UnitTest++.h>
@@ -137,8 +141,7 @@ TEST(PipeAPIs)
     CHECK_EQUAL(pipe->SendCommand(VC_CMD_START), VC_SUCCESS);
 
     //wait untill a buffer is pushed but source device
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
     CHECK(input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
@@ -147,8 +150,7 @@ TEST(PipeAPIs)
     CHECK_EQUAL(input->RecycleBuffer(buf), VC_SUCCESS);
 
     //wait untill a buffer is pushed by source device
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
     CHECK(input->IsBufferAvailable());
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -312,8 +314,7 @@ TEST(FileIOTEST)
     CHECK_EQUAL(fsrc->SendCommand(VC_CMD_START), VC_SUCCESS);
 
     //wait untill a buffer is pushed but source device
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
     CHECK(input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
@@ -322,8 +323,7 @@ TEST(FileIOTEST)
     CHECK_EQUAL(input->RecycleBuffer(buf), VC_SUCCESS);
 
     //wait untill a buffer is pushed by source device
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
     CHECK(input->IsBufferAvailable());
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -358,8 +358,7 @@ TEST(SocketIOTest)
     output1->PushBuffer(buf);
     buf = NULL;
 
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -369,8 +368,7 @@ TEST(SocketIOTest)
 
     delete output1;
 
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -384,8 +382,7 @@ TEST(SocketIOTest)
     buf->WriteData((void*) "RPiCast Test2", 13);
     output2->PushBuffer(buf);
 
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
@@ -423,8 +420,7 @@ TEST(SocketIODeviceTest)
     output->PushBuffer(buf);
     buf = NULL;
 
-    while (!input->IsBufferAvailable())
-        ;
+    while (!input->IsBufferAvailable());
 
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
