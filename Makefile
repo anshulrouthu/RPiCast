@@ -1,8 +1,26 @@
+#*********************************************************************
+# RPiCast ( Screencasting application using RaspberryPi )
+#
+# Copyright (C) 2014 Anshul Routhu <anshul.m67@gmail.com>
+#
+# All rights reserved.
+#
+# This file Makefile is part of RPiCast project
+#
+# RPiCast is a free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#*********************************************************************/
 
-# use pkg-config for getting CFLAGS and LDLIBS
-
-CROSSPREFIX:=arm-linux-gnueabihf-
-#INCLUDE= -I/usr/local/include
 FFMPEG_LIBS=    libavdevice                        \
                 libavformat                        \
                 libavfilter                        \
@@ -15,16 +33,15 @@ FFMPEG_LIBS=    libavdevice                        \
 FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 
 BUILD_PATH:=build
-RPATH:=target_cross/usr/lib/
 CC:=g++
+RPATH:=staging/lib/
 CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
-EXT_LDLIBS:=-lcurl -lUnitTest++ $(FFMPEGLIBS)
-
-EXT_LDPATH:=-Ltarget/lib
+EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
+EXT_LDPATH:=-Lstaging/lib
 LDFLAGS:=-Lbuild/ -lrpicast
 
 ############ ----- Project include paths ----- ##############
-INC:=-Itarget/include/                                 \
+INC:=-Istaging/include/                                \
      -Isource/osapi/                                   \
      -Isource/framework/                               \
      -Isource/porting_layers/components/               \
@@ -33,9 +50,9 @@ INC:=-Itarget/include/                                 \
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=source/main/rpicast.cpp source/main/rpicast-server.cpp source/porting_layers/components/video_tunnel.cpp
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp)              \
-                                                       $(wildcard source/framework/*.cpp)                              \
-                                                       $(wildcard source/osapi/*.cpp)                                  \
+OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting_layers/components/*.cpp) \
+                                                       $(wildcard source/framework/*.cpp)                 \
+                                                       $(wildcard source/osapi/*.cpp)                     \
                                                        $(wildcard source/porting_layers/av_pipe/*.cpp)))
 
 ############ ----- build main application ----- ##############
@@ -60,7 +77,7 @@ $(TARGET): source/main/rpicast.o $(TARGET_LIB)
 	       $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 
 $(TARGET_SERVER): source/main/rpicast-server.o $(TARGET_LIB)
-	       $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
+	              $(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 %.o: %.cpp
 	 $(CC) $(CFLAGS) $(INC) -c $< -o $@
 
@@ -126,16 +143,16 @@ distclean:
 ############ ----- cross compilation ----- ##############
 
 cross-tests: clean
-	        $(MAKE) -f Makefile-cross tests	clean
+	         $(MAKE) -f Makefile.cross tests	clean
 
 cross-samples: clean
-	        $(MAKE) -f Makefile-cross samples clean
+	           $(MAKE) -f Makefile.cross samples clean
 	        
 cross-libs: clean
-	        $(MAKE) -f Makefile-cross libs clean
+	        $(MAKE) -f Makefile.cross libs clean
 	       
 cross-distclean: clean
-	        $(MAKE) -f Makefile-cross distclean clean
+	             $(MAKE) -f Makefile.cross distclean clean
 
 cross-all: clean
-	        $(MAKE) -f Makefile-cross all clean
+	       $(MAKE) -f Makefile.cross all clean
