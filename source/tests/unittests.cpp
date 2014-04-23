@@ -22,7 +22,7 @@
  *********************************************************************/
 
 #include "utils.h"
-#include <UnitTest++.h>
+#include <UnitTest++/UnitTest++.h>
 #include "basepipe.h"
 #include "av_pipe.h"
 #include "file_io.h"
@@ -94,6 +94,10 @@ SUITE(APipeFrameworkTest)
 {
 TEST(PipeAPIs)
 {
+    FILE* f = fopen("FileSrc.in", "wb");
+    fwrite("Hello World!", 1, 12, f);
+    fclose(f);
+
     DBGPRINT(LEVEL_ALWAYS, ("Testing PipeAPIs\n"));
     BasePipe* pipe = new AVPipe("FileIO Pipe 0");
 
@@ -119,7 +123,7 @@ TEST(PipeAPIs)
 
     buf = output->GetBuffer();
     CHECK(!!buf);
-    CHECK_EQUAL(buf->WriteData((void* )"VoiceCommand", 12), VC_SUCCESS);
+    CHECK_EQUAL(buf->WriteData((void* )"RPiCast", 7), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
 
     buf = output->GetBuffer();
@@ -154,7 +158,7 @@ TEST(PipeAPIs)
     CHECK(input->IsBufferAvailable());
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
-    CHECK(!memcmp(buf->GetData(), "VoiceCommand", 12));
+    CHECK(!memcmp(buf->GetData(), "RPiCast", 7));
     CHECK_EQUAL(pipe->SendCommand(VC_CMD_STOP), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(input, pipe->FindDevice(VC_FILESRC_DEVICE)->Output(0)), VC_SUCCESS);
     pipe->Uninitialize();
@@ -163,8 +167,8 @@ TEST(PipeAPIs)
     FILE* fp;
     char c[12];
     fp = fopen("FileSink.out", "rb");
-    CHECK_EQUAL(fread(c, 1, 12, fp), (uint32_t )12);
-    CHECK(!memcmp(c, "VoiceCommand", 12));
+    CHECK_EQUAL(fread(c, 1, 7, fp), (uint32_t )7);
+    CHECK(!memcmp(c, "RPiCast", 7));
 
     fclose(fp);
     delete output;
@@ -253,11 +257,11 @@ TEST(InputOutputPorts)
     CHECK_EQUAL(pipe->ConnectPorts(input, output), VC_FAILURE);
     Buffer* buf = output->GetBuffer();
     CHECK(!!buf);
-    CHECK_EQUAL(buf->WriteData((void* )"VoiceCommand", 12), VC_SUCCESS);
+    CHECK_EQUAL(buf->WriteData((void* )"RPiCast", 7), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
     Buffer* buf2 = input->GetFilledBuffer();
     CHECK(!!buf2);
-    CHECK(!memcmp(buf2->GetData(), "VoiceCommand", 12));
+    CHECK(!memcmp(buf2->GetData(), "RPiCast", 7));
     CHECK_EQUAL(input->RecycleBuffer(buf2), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(input, output), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(input, output), VC_FAILURE);
@@ -298,7 +302,7 @@ TEST(FileIOTEST)
 
     buf = output->GetBuffer();
     CHECK(!!buf);
-    CHECK_EQUAL(buf->WriteData((void* )"VoiceCommand", 12), VC_SUCCESS);
+    CHECK_EQUAL(buf->WriteData((void* )"RPiCast", 7), VC_SUCCESS);
     CHECK_EQUAL(output->PushBuffer(buf), VC_SUCCESS);
 
     buf = output->GetBuffer();
@@ -327,7 +331,7 @@ TEST(FileIOTEST)
     CHECK(input->IsBufferAvailable());
     buf = input->GetFilledBuffer();
     CHECK(!!buf);
-    CHECK(!memcmp(buf->GetData(), "VoiceCommand", 12));
+    CHECK(!memcmp(buf->GetData(), "RPiCast", 7));
     CHECK_EQUAL(fsrc->SendCommand(VC_CMD_STOP), VC_SUCCESS);
     CHECK_EQUAL(pipe->DisconnectPorts(input, fsrc->Output(0)), VC_SUCCESS);
     fsrc->Uninitialize();
@@ -336,8 +340,8 @@ TEST(FileIOTEST)
     FILE* fp;
     char c[12];
     fp = fopen("FileSink.out", "rb");
-    CHECK_EQUAL(fread(c, 1, 12, fp), (uint32_t )12);
-    CHECK(!memcmp(c, "VoiceCommand", 12));
+    CHECK_EQUAL(fread(c, 1, 7, fp), (uint32_t )7);
+    CHECK(!memcmp(c, "RPiCast", 7));
 
     fclose(fp);
     delete pipe;
