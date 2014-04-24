@@ -24,6 +24,13 @@
 #ifndef VIDEO_CAPTURE_H_
 #define VIDEO_CAPTURE_H_
 
+#include "utils.h"
+#include "worker.h"
+#include "buffer.h"
+#include "basepipe.h"
+#include "timer.h"
+#include "mutex.h"
+
 extern "C"
 {
 #ifndef INT64_C
@@ -39,13 +46,6 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 }
-
-#include "utils.h"
-#include "worker.h"
-#include "buffer.h"
-#include "basepipe.h"
-#include "timer.h"
-#include "mutex.h"
 
 /**
  * Capture Device Class that captures audio data continuously.

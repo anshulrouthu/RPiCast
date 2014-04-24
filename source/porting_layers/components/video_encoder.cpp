@@ -178,7 +178,7 @@ void VideoEncoder::Task()
             pkt.size = 0;
             av_init_packet(&pkt);
             Buffer* inbuf = m_input->GetFilledBuffer();
-            AVFrame* frame = static_cast<AVFrame*>(inbuf->GetData());
+            AVFrame* frame = static_cast<AVFrame*>((void*)inbuf->GetData());
             frame->pts = frames;
 
             err = avcodec_encode_video2(m_encodeCtx, &pkt, frame, &got_output);

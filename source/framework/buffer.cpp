@@ -28,7 +28,7 @@ Buffer::Buffer(size_t size) :
     m_tag(TAG_NONE),
     m_samples(0)
 {
-    m_data = malloc(size);
+    m_data = (unsigned char*)malloc(size);
     DBG_CHECK(m_data == NULL,, "Error allocating buffer");
 }
 
@@ -41,7 +41,7 @@ Buffer::~Buffer()
     }
 }
 
-void* Buffer::GetData()
+unsigned char* Buffer::GetData()
 {
     return (m_data);
 }

@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
                 int d;
                 DBGPRINT(LEVEL_ALWAYS, ("\nPlease select a device\n"));
                 printSSDPServers(list);
-                scanf("%d", &d);
+                std::cin >> d;
                 int i = 1;
                 for (SSDPServerList::iterator it = list.begin(); it != list.end(); it++)
                 {

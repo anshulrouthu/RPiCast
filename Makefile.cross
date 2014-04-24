@@ -27,7 +27,7 @@ BUILD_PATH:=rpi-build
 RPATH:=rpi-staging/usr/lib/
 CC:=$(CROSSPREFIX)gcc
 CXX:=$(CROSSPREFIX)g++
-CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
+CFLAGS:=-Wall -Werror -g -O2 -Wl,-rpath=$(RPATH)
 TARGET:=$(BUILD_PATH)/rpicast-server
 TARGET_LIB:=$(BUILD_PATH)/librpicast-server.so
 
@@ -43,7 +43,7 @@ LDFLAGS:=-Lrpi-build/ -lrpicast-server
 ############ ----- rpi-OpenMax variables ----- ##############
 
 OMXSTAGING:=rpi-staging
-OMXCFLAGS:=-DSTANDALONE -DARM_CROSS -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX                          \
+OMXCFLAGS:=-DSTANDALONE -DRPI_BUILD -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX                          \
            -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE    \
            -Wall -g -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX        \
            -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi
@@ -75,8 +75,8 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard source/porting
 ############ ----- build main application ----- ##############
 
 .PHONY: all
-all: $(BUILD_PATH) libs $(TARGET) sample tests
-	#@scp -r rpi-build/* 192.168.1.4:workspace/
+all: $(BUILD_PATH) libs $(TARGET) tests
+	#@scp -r rpi-build/* root@192.168.1.2:workspace/
 
 $(BUILD_PATH):
 	          @mkdir -p $@

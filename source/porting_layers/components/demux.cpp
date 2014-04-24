@@ -183,7 +183,7 @@ void DemuxDevice::Task()
                     while ((offset < pkt.size) && m_state)
                     {
                         Buffer* buf = Output(0)->GetBuffer();
-                        int write_bytes = MIN((pkt.size - offset),buf->GetMaxSize());
+                        int write_bytes = MIN((size_t)(pkt.size - offset),buf->GetMaxSize());
                         buf->WriteData(pkt.data + offset, write_bytes);
                         offset += write_bytes;
 
@@ -282,7 +282,7 @@ int CustomIOPort::read(uint8_t *buf, int buf_size)
         }
     }
 
-    read_size = MIN((m_buffer->GetSize() - m_rd_offset), buf_size);
+    read_size = MIN((m_buffer->GetSize() - m_rd_offset), (size_t)buf_size);
     memcpy(buf, m_buffer->GetData() + m_rd_offset, read_size);
     m_rd_offset += read_size;
 

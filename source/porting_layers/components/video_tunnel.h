@@ -92,7 +92,7 @@ public:
 
     virtual size_t GetMaxSize();
     virtual size_t GetSize();
-    virtual void* GetData();
+    virtual unsigned char* GetData();
     virtual VC_STATUS WriteData(void* buf, size_t size);
     virtual VC_STATUS SetSize(size_t size);
     OMX_BUFFERHEADERTYPE* m_omxbuf;

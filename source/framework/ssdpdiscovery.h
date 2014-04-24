@@ -43,14 +43,14 @@
                                  "MX: 10\r\n"                       \
                                  "ST: urn:dial-multiscreen-org:service:rpicast:1\r\n\r\n"
 
-//#define SSDP_DISCOVERY_RESPONSE "HTTP/1.1 200 OK\r\n"                                \
-                                 "LOCATION: http://%s:%d/dd.xml\r\n"                  \
-                                 "CACHE-CONTROL: max-age=1800\r\n"                    \
-                                 "EXT:\r\n"                                           \
-                                 "BOOTID.UPNP.ORG: 1\r\n"                             \
-                                 "SERVER: Linux/2.6 UPnP/1.0 quick_ssdp/1.0\r\n"      \
-                                 "ST: urn:dial-multiscreen-org:service:rpicast:1\r\n" \
-                                 "USN: uuid:%s::urn:dial-multiscreen-org:service:rpicast:1\r\n\r\n";
+/*#define SSDP_DISCOVERY_RESPONSE "HTTP/1.1 200 OK\r\n"
+//                                 "LOCATION: http://%s:%d/dd.xml\r\n"
+//                                 "CACHE-CONTROL: max-age=1800\r\n"
+//                                 "EXT:\r\n"
+//                                 "BOOTID.UPNP.ORG: 1\r\n"
+//                                 "SERVER: Linux/2.6 UPnP/1.0 quick_ssdp/1.0\r\n"
+//                                 "ST: urn:dial-multiscreen-org:service:rpicast:1\r\n"
+//                                 "USN: uuid:%s::urn:dial-multiscreen-org:service:rpicast:1\r\n\r\n"; */
 
 #define SSDP_DEVICE_NAME "RPiCast"
 

@@ -263,8 +263,8 @@ Buffer* SocketOutput::GetBuffer()
 
 VC_STATUS SocketOutput::PushBuffer(Buffer* buf)
 {
-    int read_size = 0;
-    int offset = 0;
+    size_t read_size = 0;
+    size_t offset = 0;
 
     while (offset < buf->GetSize())
     {

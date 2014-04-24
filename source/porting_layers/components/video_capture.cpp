@@ -193,7 +193,7 @@ void VideoCapture::Task()
     int frameFinished;
     int64_t pts;
 
-    bgr_frame = avcodec_alloc_frame();
+    bgr_frame = av_frame_alloc();
 
     int numBytes = avpicture_get_size(AV_PIX_FMT_YUV420P, SCALED_WIDTH, SCALED_HEIGHT);
     uint8_t *buffer = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
@@ -215,7 +215,7 @@ void VideoCapture::Task()
                     pts *= av_q2d(m_decodeCtx->time_base);
 
                     Buffer* buf = m_output->GetBuffer();
-                    yuv_frame = static_cast<AVFrame*>(buf->GetData());
+                    yuv_frame = static_cast<AVFrame*>((void*)buf->GetData());
                     avpicture_fill((AVPicture *) yuv_frame, buffer, AV_PIX_FMT_YUV420P, SCALED_WIDTH, SCALED_HEIGHT);
 
                     sws_scale(swsCtx, (const uint8_t * const *) bgr_frame->data, bgr_frame->linesize, 0, MAX_DEFAULT_HEIGHT,

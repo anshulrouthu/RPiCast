@@ -80,18 +80,18 @@ VC_STATUS VideoTunnel::Initialize()
     }
 
     // create video_decode
-    if (ilclient_create_component(m_handle, &m_video_decode, "video_decode",
+    if (ilclient_create_component(m_handle, &m_video_decode, (char*)"video_decode",
         (ILCLIENT_CREATE_FLAGS_T)(ILCLIENT_DISABLE_ALL_PORTS | ILCLIENT_ENABLE_INPUT_BUFFERS)) != 0)
         status = -14;
     m_list[0] = m_video_decode;
 
     // create video_render
-    if (status == 0 && ilclient_create_component(m_handle, &m_video_render, "video_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if (status == 0 && ilclient_create_component(m_handle, &m_video_render, (char*)"video_render", ILCLIENT_DISABLE_ALL_PORTS) != 0)
         status = -14;
     m_list[1] = m_video_render;
 
     // create clock
-    if (status == 0 && ilclient_create_component(m_handle, &m_clock, "clock", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if (status == 0 && ilclient_create_component(m_handle, &m_clock, (char*)"clock", ILCLIENT_DISABLE_ALL_PORTS) != 0)
         status = -14;
     m_list[2] = m_clock;
 
@@ -104,7 +104,7 @@ VC_STATUS VideoTunnel::Initialize()
         status = -13;
 
     // create video_scheduler
-    if (status == 0 && ilclient_create_component(m_handle, &m_video_scheduler, "video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
+    if (status == 0 && ilclient_create_component(m_handle, &m_video_scheduler, (char*)"video_scheduler", ILCLIENT_DISABLE_ALL_PORTS) != 0)
         status = -14;
     m_list[3] = m_video_scheduler;
 
@@ -334,7 +334,7 @@ VC_STATUS OMXBuffer::SetSize(size_t size)
     return (VC_SUCCESS);
 }
 
-void* OMXBuffer::GetData()
+unsigned char* OMXBuffer::GetData()
 {
     return (m_omxbuf->pBuffer);
 }

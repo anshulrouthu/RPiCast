@@ -24,6 +24,10 @@
 #ifndef VIDEO_ENCODER_H_
 #define VIDEO_ENCODER_H_
 
+#include "basepipe.h"
+#include "utils.h"
+#include "worker.h"
+
 extern "C"
 {
 #ifndef INT64_C
@@ -40,10 +44,6 @@ extern "C"
 #include <libavutil/avutil.h>
 #include <libavutil/opt.h>
 }
-
-#include "basepipe.h"
-#include "utils.h"
-#include "worker.h"
 
 class OutputCustomIO;
 

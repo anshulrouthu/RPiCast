@@ -35,7 +35,7 @@ FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 BUILD_PATH:=build
 CC:=g++
 RPATH:=staging/lib/
-CFLAGS:=-Wall -g -O2 -Wl,-rpath=$(RPATH)
+CFLAGS:=-Wall -Werror -g -O2 -Wl,-rpath=$(RPATH)
 EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
 EXT_LDPATH:=-Lstaging/lib
 LDFLAGS:=-Lbuild/ -lrpicast
@@ -62,7 +62,7 @@ TARGET_SERVER:=$(BUILD_PATH)/rpicast-server
 TARGET_LIB:=$(BUILD_PATH)/librpicast.so
 
 .PHONY: all
-all: $(BUILD_PATH) libs $(TARGET) $(TARGET_SERVER) sample tests
+all: $(BUILD_PATH) libs $(TARGET) tests
 
 $(BUILD_PATH):
 	          @mkdir -p $@

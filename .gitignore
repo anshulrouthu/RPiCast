@@ -1,0 +1,13 @@
+*.o
+*~
+*.in
+*.out
+*.vid
+*.aud
+.gitignore
+rpi-staging/
+rpi-toolchain/
+rpi-build/
+staging/
+build/
+extras/

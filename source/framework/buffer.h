@@ -39,7 +39,7 @@ class Buffer
 public:
     Buffer(size_t size = VC_BUFFER_MAXSIZE);
     virtual ~Buffer();
-    virtual void* GetData();
+    virtual unsigned char* GetData();
     virtual size_t GetSize();
     virtual size_t GetMaxSize();
     virtual int GetSamples();
@@ -55,7 +55,7 @@ public:
     }
     int64_t m_pts;
 protected:
-    void* m_data;
+    unsigned char* m_data;
     size_t m_size;
     BUF_TAG m_tag;
 

@@ -29,6 +29,7 @@
 #include "worker.h"
 #include "buffer.h"
 #include <map>
+
 extern "C"
 {
 #ifndef INT64_C
