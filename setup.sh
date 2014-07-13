@@ -38,7 +38,6 @@ tar xvzf ffmpeg-2.2.1.tar.gz > /dev/null
 cd ffmpeg-2.2.1
 ./configure --prefix=$PWD/../../staging \
 	    --enable-gpl       \
-            --enable-x11grab   \
             --enable-libx264   \
 	    --enable-parsers \
 	    --disable-ffprobe \
@@ -270,6 +269,6 @@ echo ""
 mkdir rpi-staging
 cd rpi-staging
 #wget tar file 
-wget https://dl.dropboxusercontent.com/u/63484953/rpi-staging-arch-linux.tar.gz
+curl https://dl.dropboxusercontent.com/u/63484953/rpi-staging-arch-linux.tar.gz -o rpi-staging-arch-linux.tar.gz
 tar xvzf rpi-staging-arch-linux.tar.gz ./
 cd ../

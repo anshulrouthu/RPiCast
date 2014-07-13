@@ -43,6 +43,10 @@ VC_STATUS VideoEncoder::Initialize()
 
     m_h264filter_ctx = av_bitstream_filter_init("h264_mp4toannexb");
 
+    av_register_all();
+    avcodec_register_all();
+    avdevice_register_all();
+
     codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     DBG_CHECK(!codec, return (VC_FAILURE), "Error: Encoder codec not found");
 
@@ -59,8 +63,8 @@ VC_STATUS VideoEncoder::Initialize()
     av_opt_set(m_encodeCtx->priv_data, "x264opts", "no-mbtree:sliced-threads:sync-lookahead=0", 0);
 
     m_encodeCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-    m_encodeCtx->width = 1280;
-    m_encodeCtx->height = 720;
+    m_encodeCtx->width = 2560;
+    m_encodeCtx->height = 1600;
     m_encodeCtx->time_base = (AVRational ) { 1, 24 };
     m_encodeCtx->pix_fmt = AV_PIX_FMT_YUV420P;
     m_encodeCtx->bit_rate = 1000 * 1000;
@@ -92,7 +96,8 @@ VC_STATUS VideoEncoder::Initialize()
         m_encodeCtx->flags |= CODEC_FLAG_GLOBAL_HEADER;
     }
 
-    DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s", codec->long_name);
+    DBG_CHECK((avcodec_open2(m_encodeCtx, codec, 0) < 0), return (VC_FAILURE), "Error: Unable to open codec %s",
+        codec->long_name);
 
     av_dump_format(m_fmtCtx, 0, NULL, 1);
     m_output->OpenOutput(m_fmtCtx);
@@ -178,12 +183,13 @@ void VideoEncoder::Task()
             pkt.size = 0;
             av_init_packet(&pkt);
             Buffer* inbuf = m_input->GetFilledBuffer();
-            AVFrame* frame = static_cast<AVFrame*>((void*)inbuf->GetData());
+            AVFrame* frame = static_cast<AVFrame*>((void*) inbuf->GetData());
             frame->pts = frames;
-
+            DBG_ALL("Enter1");
             err = avcodec_encode_video2(m_encodeCtx, &pkt, frame, &got_output);
             DBG_CHECK(err < 0, return, "Error(%d): Encoding frame", err);
 
+            DBG_ALL("Enter2");
             if (got_output)
             {
                 pkt.stream_index = m_vidstream->index;
@@ -201,23 +207,24 @@ void VideoEncoder::Task()
                     pkt.flags |= AV_PKT_FLAG_KEY;
                 }
 
-                if (m_encodeCtx->codec->id == AV_CODEC_ID_H264)
-                {
-                    AVPacket new_pkt = pkt;
-                    int result = av_bitstream_filter_filter(m_h264filter_ctx, m_fmtCtx->streams[pkt.stream_index]->codec, NULL,
-                        &new_pkt.data, &new_pkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
-
-                    /* if bitstream filter failed, just print a warning because it may be OK for
-                     * some cases, such as BD AVC video */
-                    if (result < 0)
-                    {
-                        DBG_ERR("H264 bitstream filter failed.%d", result);
-                    }
-                    else
-                    {
-                        pkt = new_pkt;
-                    }
-                }
+//                if (m_encodeCtx->codec->id == AV_CODEC_ID_H264)
+//                {
+//                    AVPacket new_pkt = pkt;
+//                    int result = av_bitstream_filter_filter(m_h264filter_ctx,
+//                        m_fmtCtx->streams[pkt.stream_index]->codec, NULL, &new_pkt.data, &new_pkt.size, pkt.data,
+//                        pkt.size, pkt.flags & AV_PKT_FLAG_KEY);
+//
+//                    /* if bitstream filter failed, just print a warning because it may be OK for
+//                     * some cases, such as BD AVC video */
+//                    if (result < 0)
+//                    {
+//                        DBG_ERR("H264 bitstream filter failed.%d", result);
+//                    }
+//                    else
+//                    {
+//                        pkt = new_pkt;
+//                    }
+//                }
 
                 av_interleaved_write_frame(m_fmtCtx, &pkt);
                 frames++;

@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
     server->Initialize();
     fsink->Initialize();
 
-    pipe->ConnectDevices(capture, encoder);
-    pipe->ConnectDevices(encoder, client);
-    pipe->ConnectDevices(server, fsink);
+    DBG_CHECK_STATIC(pipe->ConnectDevices(capture, encoder) != VC_SUCCESS,,"Error connecting capture and encoder");
+    DBG_CHECK_STATIC(pipe->ConnectDevices(encoder, client) != VC_SUCCESS,, "Error connecting encoder client");
+    DBG_CHECK_STATIC(pipe->ConnectDevices(server, fsink) !=  VC_SUCCESS,, "Error connecting server fsink");
 
     capture->SendCommand(VC_CMD_START);
     encoder->SendCommand(VC_CMD_START);

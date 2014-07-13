@@ -37,7 +37,7 @@ FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 BUILD_PATH:=build
 CC:=g++
 RPATH:=$(PROJECT_ROOT)staging/lib/
-CFLAGS:=-Wall -Werror -g -O2 -Wl,-rpath=$(RPATH)
+CFLAGS:= -g -O2
 EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
 EXT_LDPATH:=-L$(PROJECT_ROOT)/staging/lib
 LDFLAGS:=-Lbuild/ -lrpicast
@@ -58,6 +58,9 @@ OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT
                                                        $(wildcard $(PROJECT_ROOT)source/framework/*.cpp)                 \
                                                        $(wildcard $(PROJECT_ROOT)source/osapi/*.cpp)                     \
                                                        $(wildcard $(PROJECT_ROOT)source/porting_layers/av_pipe/*.cpp)))
+                                                       
+OBJS:=$(OBJS) $(patsubst %.mm, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)source/porting_layers/components/*.mm)))
+
 
 ############ ----- build main application ----- ##############
 
@@ -76,7 +79,7 @@ libs: $(TARGET_LIB)
 
 $(TARGET_LIB): $(OBJS)
 	       @echo "Linking... $@"
-	       @$(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
+	       @$(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS) -framework AVFoundation -framework Foundation -framework CoreMedia -framework CoreVideo -framework Carbon
 
 $(TARGET): $(PROJECT_ROOT)source/main/rpicast.o $(TARGET_LIB)
 	   @echo "Linking... $@"
@@ -90,6 +93,10 @@ $(TARGET_SERVER): $(PROJECT_ROOT)source/main/rpicast-server.o $(TARGET_LIB)
 	  @$(CXX) $(CFLAGS) $(INC) -c $< -o $@
 
 %.o: %.c
+	 @echo "[CXX] $@"
+	 @$(CC) $(CFLAGS) $(INC) -c $< -o $@
+	 
+%.o: %.mm
 	 @echo "[CXX] $@"
 	 @$(CC) $(CFLAGS) $(INC) -c $< -o $@
 

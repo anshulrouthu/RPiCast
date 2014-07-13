@@ -22,8 +22,8 @@
 #*********************************************************************/
 PROJECT_ROOT:=./
 
-TOOLCHAINPATH:=$(PROJECT_ROOT)rpi-toolchain/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin
-CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
+TOOLCHAINPATH:=$(PROJECT_ROOT)rpi-toolchain/xtools/arm-none-linux-gnueabi/bin
+CROSSPREFIX:=$(TOOLCHAINPATH)/arm-none-linux-gnueabi-
 BUILD_PATH:=rpi-build
 CC:=$(CROSSPREFIX)gcc
 CXX:=$(CROSSPREFIX)g++

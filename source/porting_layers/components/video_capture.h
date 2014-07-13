@@ -67,6 +67,8 @@ public:
     virtual VC_STATUS SetParameters(const InputParams* params);
     virtual VC_STATUS GetParameters(OutputParams* params);
 
+    void senddata(unsigned char* data, unsigned int size);
+
 private:
     virtual void Task();
 

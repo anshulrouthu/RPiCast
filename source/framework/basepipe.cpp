@@ -308,6 +308,7 @@ Buffer* InputPort::GetFilledBuffer()
  */
 Buffer* InputPort::GetEmptyBuffer()
 {
+    DBG_ALL("Enter");
     AutoMutex automutex(&m_queue_mutex);
     while (m_buffers.size() == 0)
     {

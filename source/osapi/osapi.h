@@ -31,7 +31,7 @@
 #elif _WIN32
 
 #elif __APPLE__
-
+#include "osapi_linux.h"
 #endif
 
 #endif /* OSAPI_H_ */

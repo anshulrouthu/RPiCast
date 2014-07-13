@@ -43,7 +43,7 @@ VC_STATUS DemuxDevice::Initialize()
     av_register_all();
 
     m_h264filter_ctx = av_bitstream_filter_init("h264_mp4toannexb");
-    DBG_CHECK(!m_h264filter_ctx,, "Error(%d): Unable to create H264 bit stream filter", (int)m_h264filter_ctx);
+    //DBG_CHECK(!m_h264filter_ctx,, "Error(%d): Unable to create H264 bit stream filter", (int)m_h264filter_ctx);
 
     m_input = new CustomIOPort(m_name + "Input", this);
 

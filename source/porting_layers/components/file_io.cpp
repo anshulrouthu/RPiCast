@@ -43,7 +43,7 @@ VC_STATUS FileSink::Initialize()
     DBG_MSG("Enter");
     m_input = new InputPort("FileSink Input", this);
     m_file = fopen(m_filename, "wb");
-    DBG_CHECK(!m_file, return (VC_FAILURE), "Error(%d): Unable to open file %s", (int)m_file, m_filename);
+    //DBG_CHECK(!m_file, return (VC_FAILURE), "Error(%d): Unable to open file %s", (int)m_file, m_filename);
     return (VC_SUCCESS);
 }
 
