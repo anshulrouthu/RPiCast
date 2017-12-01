@@ -21,7 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #*********************************************************************/
 
-PROJECT_ROOT:=./
+PROJECT_ROOT:=$(PWD)
 
 FFMPEG_LIBS=    libavdevice                        \
                 libavformat                        \
@@ -31,33 +31,34 @@ FFMPEG_LIBS=    libavdevice                        \
                 libswscale                         \
                 libavutil                          \
 
+PKG_CONFIG_PATH=$(PROJECT_ROOT)/staging/lib/pkgconfig
 #CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
-FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
+FFMPEGLIBS:=$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs $(FFMPEG_LIBS))
 
 BUILD_PATH:=build
 CC:=g++
-RPATH:=$(PROJECT_ROOT)staging/lib/
+RPATH:=$(PROJECT_ROOT)/staging/lib/
 CFLAGS:=-Wall -Werror -fpic -g -O2 -Wl,-rpath=$(RPATH)
 EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
 EXT_LDPATH:=-L$(PROJECT_ROOT)/staging/lib
 LDFLAGS:=-Lbuild/ -lrpicast
 
 ############ ----- Project include paths ----- ##############
-INC:=-I$(PROJECT_ROOT)staging/include/                                \
-     -I$(PROJECT_ROOT)source/osapi/                                   \
-     -I$(PROJECT_ROOT)source/framework/                               \
-     -I$(PROJECT_ROOT)source/porting_layers/components/               \
-     -I$(PROJECT_ROOT)source/porting_layers/av_pipe/
+INC:=-I$(PROJECT_ROOT)/staging/include/                                \
+     -I$(PROJECT_ROOT)/source/osapi/                                   \
+     -I$(PROJECT_ROOT)/source/framework/                               \
+     -I$(PROJECT_ROOT)/source/porting_layers/components/               \
+     -I$(PROJECT_ROOT)/source/porting_layers/av_pipe/
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=$(PROJECT_ROOT)source/main/rpicast.cpp         \
-           $(PROJECT_ROOT)source/main/rpicast-server.cpp  \
-           $(PROJECT_ROOT)source/porting_layers/components/video_tunnel.cpp
+MAINFILES:=$(PROJECT_ROOT)/source/main/rpicast.cpp         \
+           $(PROJECT_ROOT)/source/main/rpicast-server.cpp  \
+           $(PROJECT_ROOT)/source/porting_layers/components/video_tunnel.cpp
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)source/porting_layers/components/*.cpp) \
-                                                       $(wildcard $(PROJECT_ROOT)source/framework/*.cpp)                 \
-                                                       $(wildcard $(PROJECT_ROOT)source/osapi/*.cpp)                     \
-                                                       $(wildcard $(PROJECT_ROOT)source/porting_layers/av_pipe/*.cpp)))
+OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp) \
+                                                       $(wildcard $(PROJECT_ROOT)/source/framework/*.cpp)                 \
+                                                       $(wildcard $(PROJECT_ROOT)/source/osapi/*.cpp)                     \
+                                                       $(wildcard $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.cpp)))
 
 ############ ----- build main application ----- ##############
 
@@ -78,11 +79,11 @@ $(TARGET_LIB): $(OBJS)
 	       @echo "Linking... $@"
 	       @$(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
 
-$(TARGET): $(PROJECT_ROOT)source/main/rpicast.o $(TARGET_LIB)
+$(TARGET): $(PROJECT_ROOT)/source/main/rpicast.o $(TARGET_LIB)
 	   @echo "Linking... $@"
 	   @$(CXX) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 
-$(TARGET_SERVER): $(PROJECT_ROOT)source/main/rpicast-server.o $(TARGET_LIB)
+$(TARGET_SERVER): $(PROJECT_ROOT)/source/main/rpicast-server.o $(TARGET_LIB)
 		  @echo "Linking... $@"
 	          @$(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 %.o: %.cpp
@@ -101,7 +102,7 @@ SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/hello_world       \
           $(BUILD_PATH)/muxing
 
-SAMPLE_SRC_DIR:=$(PROJECT_ROOT)samples
+SAMPLE_SRC_DIR:=$(PROJECT_ROOT)/samples
 
 .PHONY: sample
 sample: $(TARGET_LIB) $(SAMPLES)
@@ -119,7 +120,7 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_demux           \
         $(BUILD_PATH)/test_ssdp
 
-TEST_SRC_DIR:= $(PROJECT_ROOT)source/tests
+TEST_SRC_DIR:= $(PROJECT_ROOT)/source/tests
 
 .PHONY: tests
 tests: $(TARGET_LIB) $(TESTS)
@@ -132,13 +133,13 @@ $(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
 
 .PHONY: clean
 clean:
-	 @rm -f $(PROJECT_ROOT)source/framework/*.o                 \
-	        $(PROJECT_ROOT)source/osapi/*.o                     \
-	        $(PROJECT_ROOT)source/main/*.o                      \
-	        $(PROJECT_ROOT)source/porting_layers/av_pipe/*.o    \
-	        $(PROJECT_ROOT)source/porting_layers/components/*.o \
-	        $(PROJECT_ROOT)source/tests/*.o                     \
-	        $(PROJECT_ROOT)samples/*.o
+	 @rm -f $(PROJECT_ROOT)/source/framework/*.o                 \
+	        $(PROJECT_ROOT)/source/osapi/*.o                     \
+	        $(PROJECT_ROOT)/source/main/*.o                      \
+	        $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.o    \
+	        $(PROJECT_ROOT)/source/porting_layers/components/*.o \
+	        $(PROJECT_ROOT)/source/tests/*.o                     \
+	        $(PROJECT_ROOT)/samples/*.o
 
 .PHONY:distclean
 distclean:

@@ -20,14 +20,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #*********************************************************************/
-PROJECT_ROOT:=./
+PROJECT_ROOT:=$(PWD)
 
-TOOLCHAINPATH:=$(PROJECT_ROOT)rpi-toolchain/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin
+TOOLCHAINPATH:=$(PROJECT_ROOT)/rpi-toolchain/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin
 CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
 BUILD_PATH:=rpi-build
 CC:=$(CROSSPREFIX)gcc
 CXX:=$(CROSSPREFIX)g++
-SYSROOT=$(PROJECT_ROOT)rpi-staging
+SYSROOT=$(PROJECT_ROOT)/rpi-staging
 RPATH:=$(SYSROOT)/usr/lib/
 CFLAGS:= --sysroot=$(SYSROOT) -Wall -Werror -g -O2 -Wl,-rpath=$(RPATH)
 TARGET:=$(BUILD_PATH)/rpicast-server
@@ -39,12 +39,12 @@ EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
             -lasound -lSDL -lx264 -lbz2 -lz -lrt            \
             -lswresample -lswscale -lavutil -lm
 
-EXT_LDPATH:=-L$(PROJECT_ROOT)rpi-staging/usr/lib
+EXT_LDPATH:=-L$(PROJECT_ROOT)/rpi-staging/usr/lib
 LDFLAGS:=-Lrpi-build/ -lrpicast-server
 
 ############ ----- rpi-OpenMax variables ----- ##############
 
-OMXSTAGING:=$(PROJECT_ROOT)rpi-staging
+OMXSTAGING:=$(PROJECT_ROOT)/rpi-staging
 OMXCFLAGS:=-DSTANDALONE -DRPI_BUILD -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX              \
            -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE    \
            -Wall -g -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX        \
@@ -58,21 +58,21 @@ OMXINC:=-I$(OMXSTAGING)/opt/vc/include/ -I$(OMXSTAGING)/opt/vc/include/interface
          -I$(OMXSTAGING)/opt/vc/src/hello_pi/libs/vgfont
 
 ############ ----- Project include paths ----- ##############
-INC:= $(OMXINC) -I$(PROJECT_ROOT)rpi-staging/usr/include/             \
-     -I$(PROJECT_ROOT)source/osapi/                                   \
-     -I$(PROJECT_ROOT)source/framework/                               \
-     -I$(PROJECT_ROOT)source/porting_layers/components/               \
-     -I$(PROJECT_ROOT)source/porting_layers/av_pipe/                  \
-     -I./
+INC:= $(OMXINC) -I$(PROJECT_ROOT)/rpi-staging/usr/include/             \
+     -I$(PROJECT_ROOT)/source/osapi/                                   \
+     -I$(PROJECT_ROOT)/source/framework/                               \
+     -I$(PROJECT_ROOT)/source/porting_layers/components/               \
+     -I$(PROJECT_ROOT)/source/porting_layers/av_pipe/                  \
+     -I$(PROJECT_ROOT)
 
 
 #list of files containing main() function, to prevent conflicts while linking
-MAINFILES:=$(PROJECT_ROOT)source/main/rpicast-server.cpp
+MAINFILES:=$(PROJECT_ROOT)/source/main/rpicast-server.cpp
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)source/porting_layers/components/*.cpp)              \
-                                                       $(wildcard $(PROJECT_ROOT)source/framework/*.cpp)                              \
-                                                       $(wildcard $(PROJECT_ROOT)source/osapi/*.cpp)                                  \
-                                                       $(wildcard $(PROJECT_ROOT)source/porting_layers/av_pipe/*.cpp)))
+OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp)              \
+                                                       $(wildcard $(PROJECT_ROOT)/source/framework/*.cpp)                              \
+                                                       $(wildcard $(PROJECT_ROOT)/source/osapi/*.cpp)                                  \
+                                                       $(wildcard $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.cpp)))
 
 ############ ----- build main application ----- ##############
 
@@ -90,7 +90,7 @@ $(TARGET_LIB): $(OBJS)
 	       @echo "Linking... $@"
 	       @$(CXX) $(CFLAGS) -fpic -shared $^ -o $@ $(EXT_LDPATH) $(EXT_LDLIBS)
 
-$(TARGET): $(PROJECT_ROOT)source/main/rpicast-server.o
+$(TARGET): $(PROJECT_ROOT)/source/main/rpicast-server.o
 	   @echo "Linking... $@"
 	   @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 
@@ -110,7 +110,7 @@ SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/hello_world       \
           $(BUILD_PATH)/hello_video
 
-SAMPLE_SRC_DIR:=$(PROJECT_ROOT)samples
+SAMPLE_SRC_DIR:=$(PROJECT_ROOT)/samples
 
 .PHONY: sample
 sample: $(TARGET_LIB) $(SAMPLES)
@@ -128,7 +128,7 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_demux           \
         $(BUILD_PATH)/test_ssdp
 
-TEST_SRC_DIR:= $(PROJECT_ROOT)source/tests
+TEST_SRC_DIR:= $(PROJECT_ROOT)/source/tests
 
 .PHONY: tests
 tests: $(TARGET_LIB) $(TESTS)
@@ -141,13 +141,13 @@ $(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
 
 .PHONY: clean
 clean:
-	 @rm -f $(PROJECT_ROOT)source/framework/*.o                 \
-	        $(PROJECT_ROOT)source/osapi/*.o                     \
-	        $(PROJECT_ROOT)source/main/*.o                      \
-	        $(PROJECT_ROOT)source/porting_layers/av_pipe/*.o    \
-	        $(PROJECT_ROOT)source/porting_layers/components/*.o \
-	        $(PROJECT_ROOT)source/tests/*.o                     \
-	        $(PROJECT_ROOT)samples/*.o
+	 @rm -f $(PROJECT_ROOT)/source/framework/*.o                 \
+	        $(PROJECT_ROOT)/source/osapi/*.o                     \
+	        $(PROJECT_ROOT)/source/main/*.o                      \
+	        $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.o    \
+	        $(PROJECT_ROOT)/source/porting_layers/components/*.o \
+	        $(PROJECT_ROOT)/source/tests/*.o                     \
+	        $(PROJECT_ROOT)/samples/*.o
 
 .PHONY:distclean
 distclean:
