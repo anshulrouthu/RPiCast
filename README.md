@@ -12,11 +12,13 @@ Build Instructions
 ------------------
 Run setup.sh first, This script will build ffmpeg (with x11grab & libx264 enabled), UnitTest++ and install all the built libraries in the staging dir where the makefile will look for these libs. It will also pull the cross compiler toolchain for building rpi apps and cross staging tarball from my dropbox and extract in rpi-staging for cross compiling rpi apps.
 
+NOTE: setup.sh will setup cross compilation environment, hence should be run in development machine.
+
 $ ./setup.sh (you should run this only first time after new checkout, this should take appx 8-10 mins)<br>
 $ make cross-all all
 
-You can find the native binaries in ./build dir and the rpi's binaries in ./rpi-build dir
-Transfer the ./rpi-build/* to RaspberryPi
+You can find the native binaries in ./build/native and the rpi's binaries in ./build/pi
+Transfer the binaries in ./build/pi directory to RaspberryPi
 
 Usage
 -----

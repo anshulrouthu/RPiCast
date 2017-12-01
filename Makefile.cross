@@ -24,7 +24,7 @@ PROJECT_ROOT:=$(PWD)
 
 TOOLCHAINPATH:=$(PROJECT_ROOT)/rpi-toolchain/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin
 CROSSPREFIX:=$(TOOLCHAINPATH)/arm-linux-gnueabihf-
-BUILD_PATH:=rpi-build
+BUILD_PATH:=build/pi
 CC:=$(CROSSPREFIX)gcc
 CXX:=$(CROSSPREFIX)g++
 SYSROOT=$(PROJECT_ROOT)/rpi-staging
@@ -40,7 +40,7 @@ EXT_LDLIBS:=-lcurl -lUnitTest++ -pthread -lavdevice         \
             -lswresample -lswscale -lavutil -lm
 
 EXT_LDPATH:=-L$(PROJECT_ROOT)/rpi-staging/usr/lib
-LDFLAGS:=-Lrpi-build/ -lrpicast-server
+LDFLAGS:=-L$(BUILD_PATH) -lrpicast-server
 
 ############ ----- rpi-OpenMax variables ----- ##############
 
@@ -69,9 +69,11 @@ INC:= $(OMXINC) -I$(PROJECT_ROOT)/rpi-staging/usr/include/             \
 #list of files containing main() function, to prevent conflicts while linking
 MAINFILES:=$(PROJECT_ROOT)/source/main/rpicast-server.cpp
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp)              \
-                                                       $(wildcard $(PROJECT_ROOT)/source/framework/*.cpp)                              \
-                                                       $(wildcard $(PROJECT_ROOT)/source/osapi/*.cpp)                                  \
+OBJS_OUT_DIR:=$(PROJECT_ROOT)/$(BUILD_PATH)
+OBJS:=$(patsubst $(PROJECT_ROOT)/%.cpp, $(OBJS_OUT_DIR)/%.o, $(filter-out $(MAINFILES), \
+													   $(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp) \
+                                                       $(wildcard $(PROJECT_ROOT)/source/framework/*.cpp)                 \
+                                                       $(wildcard $(PROJECT_ROOT)/source/osapi/*.cpp)                     \
                                                        $(wildcard $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.cpp)))
 
 ############ ----- build main application ----- ##############
@@ -82,6 +84,10 @@ all: $(BUILD_PATH) libs $(TARGET) tests
 
 $(BUILD_PATH):
 	          @mkdir -p $@
+			  @mkdir -p $(dir $(OBJS))
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/source/main
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/source/tests
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/samples
 	
 .PHONY:libs
 libs: $(TARGET_LIB)
@@ -90,15 +96,15 @@ $(TARGET_LIB): $(OBJS)
 	       @echo "Linking... $@"
 	       @$(CXX) $(CFLAGS) -fpic -shared $^ -o $@ $(EXT_LDPATH) $(EXT_LDLIBS)
 
-$(TARGET): $(PROJECT_ROOT)/source/main/rpicast-server.o
+$(TARGET): $(PROJECT_ROOT)/$(BUILD_PATH)/source/main/rpicast-server.o
 	   @echo "Linking... $@"
 	   @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 
-%.o: %.cpp
+$(OBJS_OUT_DIR)/%.o: $(PROJECT_ROOT)/%.cpp
 	 @echo "[CXX] $@"
 	 @$(CXX) $(CFLAGS) $(OMXCFLAGS) $(INC) -c $< -o $@
 
-%.o: %.c
+$(OBJS_OUT_DIR)/%.o: $(PROJECT_ROOT)/%.c
 	 @echo "[CC] $@"
 	 @$(CC) $(CFLAGS) $(OMXCFLAGS) $(INC) -c $< -o $@
 
@@ -110,12 +116,12 @@ SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/hello_world       \
           $(BUILD_PATH)/hello_video
 
-SAMPLE_SRC_DIR:=$(PROJECT_ROOT)/samples
+SAMPLE_OBJ_DIR:=$(PROJECT_ROOT)/$(BUILD_PATH)/samples
 
 .PHONY: sample
 sample: $(TARGET_LIB) $(SAMPLES)
 
-$(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
+$(BUILD_PATH)/%: $(SAMPLE_OBJ_DIR)/%.o
 		 @echo "Linking... $@"
 	         @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 			
@@ -128,29 +134,19 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_demux           \
         $(BUILD_PATH)/test_ssdp
 
-TEST_SRC_DIR:= $(PROJECT_ROOT)/source/tests
+TEST_OBJ_DIR:= $(PROJECT_ROOT)/$(BUILD_PATH)/source/tests
 
 .PHONY: tests
 tests: $(TARGET_LIB) $(TESTS)
 	   	
-$(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
+$(BUILD_PATH)/%: $(TEST_OBJ_DIR)/%.o
 	         @echo "Linking... $@"
 	         @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(EXT_LDLIBS) $(OMXLDFLAGS)
 
 ############ ----- cleaning ----- ##############
 
+
 .PHONY: clean
 clean:
-	 @rm -f $(PROJECT_ROOT)/source/framework/*.o                 \
-	        $(PROJECT_ROOT)/source/osapi/*.o                     \
-	        $(PROJECT_ROOT)/source/main/*.o                      \
-	        $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.o    \
-	        $(PROJECT_ROOT)/source/porting_layers/components/*.o \
-	        $(PROJECT_ROOT)/source/tests/*.o                     \
-	        $(PROJECT_ROOT)/samples/*.o
-
-.PHONY:distclean
-distclean:
-	 @rm -f $(TARGET)                            \
-	        $(TARGET_LIB)                        \
-	        $(BUILD_PATH)/*
+	 @echo "Cleaning files..."
+	 @rm -rf $(PROJECT_ROOT)/$(BUILD_PATH)

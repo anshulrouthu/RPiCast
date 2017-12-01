@@ -35,13 +35,13 @@ PKG_CONFIG_PATH=$(PROJECT_ROOT)/staging/lib/pkgconfig
 #CFLAGS:= $(shell pkg-config --cflags $(FFMPEG_LIBS)) $(CFLAGS)
 FFMPEGLIBS:=$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs $(FFMPEG_LIBS))
 
-BUILD_PATH:=build
+BUILD_PATH:=build/native
 CC:=g++
 RPATH:=$(PROJECT_ROOT)/staging/lib/
 CFLAGS:=-Wall -Werror -fpic -g -O2 -Wl,-rpath=$(RPATH)
 EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
 EXT_LDPATH:=-L$(PROJECT_ROOT)/staging/lib
-LDFLAGS:=-Lbuild/ -lrpicast
+LDFLAGS:=-L$(BUILD_PATH) -lrpicast
 
 ############ ----- Project include paths ----- ##############
 INC:=-I$(PROJECT_ROOT)/staging/include/                                \
@@ -55,7 +55,9 @@ MAINFILES:=$(PROJECT_ROOT)/source/main/rpicast.cpp         \
            $(PROJECT_ROOT)/source/main/rpicast-server.cpp  \
            $(PROJECT_ROOT)/source/porting_layers/components/video_tunnel.cpp
            
-OBJS:=$(patsubst %.cpp, %.o, $(filter-out $(MAINFILES),$(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp) \
+OBJS_OUT_DIR:=$(PROJECT_ROOT)/$(BUILD_PATH)
+OBJS:=$(patsubst $(PROJECT_ROOT)/%.cpp, $(OBJS_OUT_DIR)/%.o, $(filter-out $(MAINFILES), \
+													   $(wildcard $(PROJECT_ROOT)/source/porting_layers/components/*.cpp) \
                                                        $(wildcard $(PROJECT_ROOT)/source/framework/*.cpp)                 \
                                                        $(wildcard $(PROJECT_ROOT)/source/osapi/*.cpp)                     \
                                                        $(wildcard $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.cpp)))
@@ -71,6 +73,10 @@ all: $(BUILD_PATH) libs $(TARGET) tests
 
 $(BUILD_PATH):
 	          @mkdir -p $@
+	          @mkdir -p $(dir $(OBJS))
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/source/main
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/source/tests
+	          @mkdir -p $(PROJECT_ROOT)/$(BUILD_PATH)/samples
 	
 .PHONY:libs
 libs: $(TARGET_LIB)
@@ -79,19 +85,20 @@ $(TARGET_LIB): $(OBJS)
 	       @echo "Linking... $@"
 	       @$(CC) $(CFLAGS) -fpic -shared $(EXT_LDPATH) $^ -o $@ $(EXT_LDLIBS)
 
-$(TARGET): $(PROJECT_ROOT)/source/main/rpicast.o $(TARGET_LIB)
+$(TARGET): $(PROJECT_ROOT)/$(BUILD_PATH)/source/main/rpicast.o $(TARGET_LIB)
 	   @echo "Linking... $@"
 	   @$(CXX) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
 
-$(TARGET_SERVER): $(PROJECT_ROOT)/source/main/rpicast-server.o $(TARGET_LIB)
+$(TARGET_SERVER): $(PROJECT_ROOT)/$(BUILD_PATH)/source/main/rpicast-server.o $(TARGET_LIB)
 		  @echo "Linking... $@"
-	          @$(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
-%.o: %.cpp
+	      @$(CC) $(CFLAGS) $(LDPATH) $^ -o $@ $(LDFLAGS)
+
+$(OBJS_OUT_DIR)/%.o: $(PROJECT_ROOT)/%.cpp
 	  @echo "[CXX] $@"
 	  @$(CXX) $(CFLAGS) $(INC) -c $< -o $@
 
-%.o: %.c
-	 @echo "[CXX] $@"
+$(OBJS_OUT_DIR)/%.o: $(PROJECT_ROOT)/%.c
+	 @echo "[CC] $@"
 	 @$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 ############ ----- build samples ----- ##############
@@ -102,14 +109,14 @@ SAMPLES:= $(BUILD_PATH)/screencapture     \
           $(BUILD_PATH)/hello_world       \
           $(BUILD_PATH)/muxing
 
-SAMPLE_SRC_DIR:=$(PROJECT_ROOT)/samples
+SAMPLE_OBJ_DIR:=$(PROJECT_ROOT)/$(BUILD_PATH)/samples
 
 .PHONY: sample
 sample: $(TARGET_LIB) $(SAMPLES)
 
-$(BUILD_PATH)/%: $(SAMPLE_SRC_DIR)/%.o
+$(BUILD_PATH)/%: $(SAMPLE_OBJ_DIR)/%.o
 		 @echo "Linking... $@"
-	         @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(FFMPEGLIBS)
+		 @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) $(FFMPEGLIBS)
 			
 ############ ----- build tests ----- ##############
 
@@ -120,48 +127,35 @@ TESTS:= $(BUILD_PATH)/unittests            \
         $(BUILD_PATH)/test_demux           \
         $(BUILD_PATH)/test_ssdp
 
-TEST_SRC_DIR:= $(PROJECT_ROOT)/source/tests
+TEST_OBJ_DIR:= $(PROJECT_ROOT)/$(BUILD_PATH)/source/tests
 
 .PHONY: tests
 tests: $(TARGET_LIB) $(TESTS)
 	   	
-$(BUILD_PATH)/%: $(TEST_SRC_DIR)/%.o
+$(BUILD_PATH)/%: $(TEST_OBJ_DIR)/%.o
 		 @echo "Linking... $@"
-	         @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) -lUnitTest++
+		 @$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(EXT_LDPATH) -lUnitTest++
 
 ############ ----- cleaning ----- ##############
 
 .PHONY: clean
 clean:
-	 @rm -f $(PROJECT_ROOT)/source/framework/*.o                 \
-	        $(PROJECT_ROOT)/source/osapi/*.o                     \
-	        $(PROJECT_ROOT)/source/main/*.o                      \
-	        $(PROJECT_ROOT)/source/porting_layers/av_pipe/*.o    \
-	        $(PROJECT_ROOT)/source/porting_layers/components/*.o \
-	        $(PROJECT_ROOT)/source/tests/*.o                     \
-	        $(PROJECT_ROOT)/samples/*.o
-
-.PHONY:distclean
-distclean:
 	 @echo "Cleaning files..."
-	 @rm -f $(TARGET)                            \
-	        $(TARGET_LIB)                        \
-	        $(BUILD_PATH)/*
-	 @$(MAKE) -f Makefile.cross distclean         
+	 @rm -rf $(PROJECT_ROOT)/$(BUILD_PATH)
 
 ############ ----- cross compilation ----- ##############
 
-cross-tests: clean
-	     @$(MAKE) -f Makefile.cross tests	clean
+cross-tests:
+	     @$(MAKE) -f Makefile.cross tests
 
-cross-samples: clean
-	       @$(MAKE) -f Makefile.cross samples clean
+cross-samples:
+	       @$(MAKE) -f Makefile.cross samples
 	        
-cross-libs: clean
-	       @$(MAKE) -f Makefile.cross libs clean
-	       
-cross-distclean: clean
-	         @$(MAKE) -f Makefile.cross distclean clean
+cross-libs:
+	       @$(MAKE) -f Makefile.cross libs
 
-cross-all: clean
-	   @$(MAKE) -f Makefile.cross all clean
+cross-all:
+	   @$(MAKE) -f Makefile.cross
+
+cross-clean:
+	   @$(MAKE) -f Makefile.cross clean
