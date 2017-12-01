@@ -37,7 +37,7 @@ FFMPEGLIBS:=$(shell pkg-config --libs $(FFMPEG_LIBS))
 BUILD_PATH:=build
 CC:=g++
 RPATH:=$(PROJECT_ROOT)staging/lib/
-CFLAGS:=-Wall -Werror -g -O2 -Wl,-rpath=$(RPATH)
+CFLAGS:=-Wall -Werror -fpic -g -O2 -Wl,-rpath=$(RPATH)
 EXT_LDLIBS:=-lUnitTest++ $(FFMPEGLIBS)
 EXT_LDPATH:=-L$(PROJECT_ROOT)/staging/lib
 LDFLAGS:=-Lbuild/ -lrpicast

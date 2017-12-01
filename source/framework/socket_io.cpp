@@ -270,7 +270,7 @@ VC_STATUS SocketOutput::PushBuffer(Buffer* buf)
     {
         read_size = MIN(buf->GetSize() - offset, UDP_PACKET_MAXSIZE);
         size_t bytes = sendto(m_handle, buf->GetData() + offset, read_size, 0, (struct sockaddr *) &m_server_addr, sizeof(m_server_addr));
-        DBG_CHECK(bytes != read_size, return (VC_FAILURE), "Error(%d): Data sent incomplete %d", bytes, read_size);
+        DBG_CHECK(bytes != read_size, return (VC_FAILURE), "Error(%d): Data sent incomplete %d", (int)bytes, (int)read_size);
         offset += read_size;
     }
     return (VC_SUCCESS);

@@ -43,7 +43,7 @@ VC_STATUS FileSink::Initialize()
     DBG_MSG("Enter");
     m_input = new InputPort("FileSink Input", this);
     m_file = fopen(m_filename, "wb");
-    DBG_CHECK(!m_file, return (VC_FAILURE), "Error(%d): Unable to open file %s", (int)m_file, m_filename);
+    DBG_CHECK(!m_file, return (VC_FAILURE), "Error: Unable to open file %s", m_filename);
     return (VC_SUCCESS);
 }
 
@@ -219,7 +219,7 @@ void FileSrc::Task()
         Buffer* buf = m_output->GetBuffer();
         size_t size = fread(buf->GetData(), 1, buf->GetMaxSize(), m_file);
 
-        DBG_TRACE("Size of data read %d", size);
+        DBG_TRACE("Size of data read %d", (int)size);
 
         if (size > 0)
         {

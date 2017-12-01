@@ -270,6 +270,6 @@ echo ""
 mkdir rpi-staging
 cd rpi-staging
 #wget tar file 
-wget https://dl.dropboxusercontent.com/u/63484953/rpi-staging-arch-linux.tar.gz
+wget https://www.dropbox.com/s/a85oklmxbbgtdtd/rpi-staging-arch-linux.tar.gz?dl=0 -O rpi-staging-arch-linux.tar.gz
 tar xvzf rpi-staging-arch-linux.tar.gz ./
 cd ../
