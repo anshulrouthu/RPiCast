@@ -1,7 +1,7 @@
 #*********************************************************************
 # RPiCast ( Screencasting application using RaspberryPi )
 #
-# Copyright (C) 2014 Anshul Routhu <anshul.m67@gmail.com>
+# Copyright (C) 2014-2018 Anshul Routhu <anshul.m67@gmail.com>
 #
 # All rights reserved.
 #
@@ -23,9 +23,17 @@
 
 #!/bin/sh
 
-mkdir staging
-mkdir extras 
+mkdir -p staging
+mkdir -p extras
 cd extras
+
+error_check()
+{
+    if [ "$?" != "0" ]; then
+        echo "$1" 1>&2
+        exit 1
+    fi
+}
 
 #building ffmpeg 
 echo ""
@@ -33,13 +41,15 @@ echo "##############################"
 echo "#      Building FFMPEG       #"
 echo "##############################"
 echo ""
-wget http://www.ffmpeg.org/releases/ffmpeg-2.2.1.tar.gz 
+if [ ! -f "ffmpeg-2.2.1.tar.gz" ]; then
+    wget http://www.ffmpeg.org/releases/ffmpeg-2.2.1.tar.gz 
+fi
 tar xvzf ffmpeg-2.2.1.tar.gz > /dev/null
 cd ffmpeg-2.2.1
 ./configure --prefix=$PWD/../../staging \
 	    --enable-gpl       \
-            --enable-x11grab   \
-            --enable-libx264   \
+        --enable-x11grab   \
+        --enable-libx264   \
 	    --enable-parsers \
 	    --disable-ffprobe \
 	    --disable-ffplay \
@@ -48,7 +58,7 @@ cd ffmpeg-2.2.1
 	    --enable-shared \
 	    --disable-doc \
 	    --disable-postproc \
-            --enable-protocols \
+        --enable-protocols \
 	    --enable-nonfree \
 	    --enable-openssl \
 	    --enable-pthreads \
@@ -127,7 +137,7 @@ cd ffmpeg-2.2.1
 	    --disable-decoder=pam \
 	    --disable-decoder=ffvhuff \
 	    --disable-decoder=rv30 \
-            --disable-decoder=rv40 \
+        --disable-decoder=rv40 \
 	    --enable-decoder=vc1 \
 	    --enable-decoder=wmv3 \
 	    --disable-decoder=loco \
@@ -234,7 +244,8 @@ cd ffmpeg-2.2.1
 	    --disable-decoder=bintext \
 	    --disable-decoder=xbin \
 	    --disable-decoder=idf \
-            && make && make install
+        && make -j8 && make install
+error_check "ffmgeg build failed! Aborting.\n"  
 cd ../
 
 #building the unittest++
@@ -247,7 +258,8 @@ git clone https://github.com/unittest-cpp/unittest-cpp.git UnitTest++
 cd UnitTest++
 cd builds
 cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../../staging/ ../
-make all && make install
+make all -j8 && make install
+error_check "UnitTest++ build failed! Aborting.\n"
 cd ../../../
 
 #get cross compiler tool chain for raspberrypi
@@ -256,9 +268,12 @@ echo "##############################"
 echo "#    Get Cross Toolchain     #"
 echo "##############################"
 echo ""
-mkdir rpi-toolchain
+mkdir -p rpi-toolchain
 cd rpi-toolchain
-git clone https://github.com/raspberrypi/tools.git ./
+if [ ! -d ".git" ]; then
+    git clone https://github.com/raspberrypi/tools.git ./
+fi
+error_check "Unable to get toolchain for raspberry-pi! Aborting.\n"
 cd ../
 
 #create staging dir for raspberrypi
@@ -267,9 +282,14 @@ echo "##############################"
 echo "#     Create RPi Staging     #"
 echo "##############################"
 echo ""
-mkdir rpi-staging
+mkdir -p rpi-staging
 cd rpi-staging
 #wget tar file 
-wget https://www.dropbox.com/s/a85oklmxbbgtdtd/rpi-staging-arch-linux.tar.gz?dl=0 -O rpi-staging-arch-linux.tar.gz
+if [ ! -f "rpi-staging-arch-linux.tar.gz" ]; then
+    wget https://www.dropbox.com/s/a85oklmxbbgtdtd/rpi-staging-arch-linux.tar.gz?dl=0 -O rpi-staging-arch-linux.tar.gz
+fi
 tar xvzf rpi-staging-arch-linux.tar.gz ./
+error_check "Unable to get staging files for raspberry-pi! Aborting.\n"
 cd ../
+
+echo "Setup script completed successfully"
